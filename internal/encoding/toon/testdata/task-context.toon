@@ -1,0 +1,7 @@
+# toon v3.0
+task:
+  id: 2.0
+  title: Errors package
+  description: Port v1 *Error type verbatim
+related_files[2]: cmd/samuel/main.go,internal/errors/errors.go
+acceptance[3]: round-trip,nil-safe,structured-fields

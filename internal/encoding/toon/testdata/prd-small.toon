@@ -1,0 +1,8 @@
+# toon v3.0
+prd: "0001"
+title: Samuel v2 Foundation
+state: in_progress
+tasks[3]{id,title,status,priority}:
+  1.0,Go module scaffold,pending,high
+  2.0,"Errors package, port from v1",pending,high
+  3.0,Lock package,pending,medium

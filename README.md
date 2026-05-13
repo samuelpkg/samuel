@@ -2,7 +2,7 @@
 
 The rebuild. Clean break from v1.
 
-> Status: **pre-implementation**. PRDs drafted, code not yet written.
+> Status: **Milestone 1 (Foundation) implemented.** Module scaffold, structured errors, flock-based lock, TOON encoder/decoder, samuel.toml/samuel.lock, plugin interface stubs, Cobra CLI with `samuel version` (+ `--json`), Charm UI base, AGENTS.md template, build/release infra (Makefile, goreleaser with cosign signing, GitHub Actions, install.sh). Ready to tag `v2.0.0-alpha.1`.
 
 ## What v2 is
 
@@ -53,11 +53,18 @@ The wiki is **not committed to v2's repo** — it's exploratory thinking outside
 
 ## Source code
 
-Empty. Implementation begins after PRDs and the foundation RFD (0005) are reviewed.
+Foundation milestone lives on `main`. Build with:
 
-When code starts, the layout follows standard Go convention:
-
+```bash
+make build
+./bin/samuel version
+./bin/samuel version --json   # v4 JSON envelope
+make test                     # race + cover across all packages
 ```
+
+Layout follows standard Go convention:
+
+```text
 samuel_v2/
 ├── cmd/samuel/main.go          # CLI entry (~18 lines, ported from v1)
 ├── internal/                   # private packages

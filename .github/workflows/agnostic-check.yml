@@ -1,0 +1,44 @@
+name: Agnostic check
+
+# RFD 0002: Samuel v2 must be agent-agnostic. AGENTS.md is canonical;
+# any reference to CLAUDE.md, .claude/, .cursor/, Codex, or other
+# tool-specific paths inside internal/ is a leak that belongs in a
+# translator plugin, not the framework. This check fails the build if
+# such a leak appears.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'internal/**'
+      - 'cmd/**'
+      - 'template/**'
+      - '.github/workflows/agnostic-check.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'internal/**'
+      - 'cmd/**'
+      - 'template/**'
+      - '.github/workflows/agnostic-check.yml'
+
+jobs:
+  grep-leaks:
+    name: Tool-specific references
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Forbid tool-specific references in internal/
+        run: |
+          set +e
+          # Patterns matched as whole words / paths. The template and
+          # this workflow file are the only places allowed to mention
+          # AGENTS.md (which is itself agent-agnostic).
+          PATTERNS='CLAUDE\.md|\.claude/|\.cursor/|\.codex/|Cursor|Codex CLI'
+          HITS=$(grep -RInE "$PATTERNS" internal/ cmd/ 2>/dev/null || true)
+          if [ -n "$HITS" ]; then
+            echo "::error::Tool-specific references found in internal/ or cmd/. Move to a translator plugin."
+            echo "$HITS"
+            exit 1
+          fi
+          echo "OK — no tool-specific leaks found."

@@ -1,0 +1,9 @@
+# toon v3.0
+generated_at: "2026-05-12T20:00:00Z"
+file_count: 23
+todo_count: 47
+files[4]{path,lines,kind}:
+  cmd/samuel/main.go,18,source
+  internal/errors/errors.go,99,source
+  internal/lock/lock_unix.go,142,source
+  README.md,104,doc

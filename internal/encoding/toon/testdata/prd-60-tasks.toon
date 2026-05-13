@@ -1,0 +1,66 @@
+# toon v3.0
+prd: "0001"
+title: Samuel v2 Foundation (60-task fixture)
+state: in_progress
+tasks[61]{id,title,status,priority}:
+  1.1,go mod init,done,high
+  1.2,cmd/samuel/main.go stub,done,high
+  1.3,internal/ tree,done,high
+  1.4,LICENSE editorconfig README,done,medium
+  1.5,verify go build,done,high
+  2.1,port errors.go,done,high
+  2.2,keep six fields,done,high
+  2.3,Wrap helpers,done,high
+  2.4,update DocsURL host,done,low
+  2.5,errors_test.go,done,high
+  2.6,reserve namespace ranges,done,medium
+  3.1,port lock_unix.go,done,high
+  3.2,port lock_other.go,done,high
+  3.3,update lock path,done,high
+  3.4,keep O_CLOEXEC,done,high
+  3.5,lock_unix_test.go,done,high
+  3.6,non-unix fallback,done,medium
+  4.1,audit TOON libraries,done,high
+  4.2,encoder primitives,done,high
+  4.3,encoder tabular,done,high
+  4.4,decoder line-by-line,done,high
+  4.5,decoder malformed recovery,done,high
+  4.6,version pin,done,high
+  4.7,golden corpus,in_progress,high
+  4.8,encoder+decoder tests,in_progress,high
+  5.1,Config struct,pending,high
+  5.2,pelletier toml v2,pending,high
+  5.3,load,pending,high
+  5.4,save atomic,pending,high
+  5.5,lockfile,pending,medium
+  5.6,config_test.go,pending,high
+  6.1,Plugin interface,pending,high
+  6.2,companion types,pending,high
+  6.3,Manifest struct,pending,high
+  6.4,empty plugin stubs,pending,medium
+  6.5,compile-time check,pending,medium
+  7.1,Cobra root,pending,high
+  7.2,persistent flags,pending,high
+  7.3,JSONMode helper,pending,medium
+  7.4,JSON envelope,pending,high
+  7.5,version cmd,pending,high
+  7.6,Execute wire-up,pending,high
+  8.1,add lipgloss,pending,high
+  8.2,color tokens,pending,high
+  8.3,output helpers,pending,high
+  8.4,err to stderr,pending,high
+  8.5,DisableColors,pending,medium
+  8.6,spinner wrapper,pending,medium
+  9.1,AGENTS.md template,pending,high
+  9.2,template variables,pending,high
+  9.3,150-line check,pending,high
+  9.4,agents-md-check workflow,pending,high
+  10.1,port Makefile,pending,high
+  10.2,port goreleaser,pending,high
+  10.3,cosign signing,pending,high
+  10.4,replace_existing_artifacts,pending,medium
+  10.5,ci.yml,pending,high
+  10.6,release.yml,pending,high
+  10.7,agnostic-check.yml,pending,medium
+  10.8,install.sh,pending,high
+  11.1,commit milestone,pending,high

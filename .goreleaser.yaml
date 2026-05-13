@@ -1,0 +1,151 @@
+# GoReleaser configuration for Samuel v2
+# Documentation: https://goreleaser.com
+
+version: 2
+
+project_name: samuel
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: samuel
+    main: ./cmd/samuel
+    binary: samuel
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X github.com/ar4mirez/samuel/internal/commands.Version={{.Version}}
+      - -X github.com/ar4mirez/samuel/internal/commands.Commit={{.Commit}}
+      - -X github.com/ar4mirez/samuel/internal/commands.BuildDate={{.Date}}
+
+archives:
+  - id: default
+    formats:
+      - tar.gz
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- .Os }}_
+      {{- .Arch }}
+    files:
+      - README.md
+      - LICENSE
+
+checksum:
+  name_template: 'checksums.txt'
+
+# Sigstore keyless signing. The OIDC token for the GitHub Actions
+# release workflow is exchanged for a short-lived Fulcio certificate;
+# the signature + cert are uploaded next to each artifact. Verification:
+#
+#   cosign verify-blob \
+#     --certificate-identity-regexp 'https://github.com/ar4mirez/samuel/.*' \
+#     --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+#     --bundle samuel_v2.0.0_linux_amd64.tar.gz.cosign.bundle \
+#     samuel_v2.0.0_linux_amd64.tar.gz
+signs:
+  - cmd: cosign
+    signature: "${artifact}.cosign.bundle"
+    args:
+      - "sign-blob"
+      - "--yes"
+      - "--bundle=${signature}"
+      - "${artifact}"
+    artifacts: all
+    output: true
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^ci:'
+      - '^chore:'
+      - Merge pull request
+      - Merge branch
+  groups:
+    - title: 'Features'
+      regexp: '^feat'
+      order: 0
+    - title: 'Bug Fixes'
+      regexp: '^fix'
+      order: 1
+    - title: 'Performance'
+      regexp: '^perf'
+      order: 2
+    - title: 'Refactoring'
+      regexp: '^refactor'
+      order: 3
+    - title: 'Other'
+      order: 999
+
+release:
+  github:
+    owner: ar4mirez
+    name: samuel
+  draft: false
+  prerelease: auto
+  name_template: "Samuel v{{.Version}}"
+  # Allow re-running the workflow on a tag that already published.
+  # Without this, a re-run after a partial failure (token issue,
+  # network blip) bombs with `422 Validation Failed: already_exists`
+  # on each asset upload. With it, GoReleaser deletes the conflicting
+  # asset and re-uploads. The release, checksums, and tag are not
+  # touched. Idempotent retries.
+  # Caught during v1 v3.0.0 ship: first run uploaded assets fine but
+  # failed at the homebrew tap step (auth). The retry could not
+  # proceed past asset upload until this flag was added.
+  replace_existing_artifacts: true
+  header: |
+    ## Samuel v{{.Version}}
+
+    ### Installation
+
+    **macOS/Linux (Homebrew)**:
+    ```bash
+    brew tap ar4mirez/tap
+    brew install samuel
+    ```
+
+    **macOS/Linux (curl)**:
+    ```bash
+    curl -sSL https://raw.githubusercontent.com/ar4mirez/samuel/main/install.sh | sh
+    ```
+
+    Cosign-signed bundles ship next to each archive. See `cosign verify-blob` instructions in the assets.
+
+  footer: |
+
+    ---
+
+    **Full Changelog**: https://github.com/ar4mirez/samuel/compare/{{ .PreviousTag }}...{{ .Tag }}
+
+brews:
+  - name: samuel
+    repository:
+      owner: ar4mirez
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    directory: Formula
+    homepage: "https://github.com/ar4mirez/samuel"
+    description: "Rails for AI coding assistants"
+    license: "MIT"
+    install: |
+      bin.install "samuel"
+      generate_completions_from_executable(bin/"samuel", "completion")
+    test: |
+      system "#{bin}/samuel", "version"
