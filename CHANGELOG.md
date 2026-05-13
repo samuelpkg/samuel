@@ -7,6 +7,34 @@ this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v2.0.0-rc.14] — Doctor `--fix` repairs plugins; install `--dry-run` is honest
+
+Closes [Issue #8](https://github.com/samuelpkg/samuel/issues/8) and
+[Issue #9](https://github.com/samuelpkg/samuel/issues/9).
+
+### Fixed
+
+- **`samuel doctor --fix` now actually repairs `plugin:<name>`
+  failures.** rc.11 added plugin health checks but
+  `attemptFix` only knew about orchestrator (framework-tier)
+  plugins, so a corrupted user-installed plugin was reported as
+  `1 fixable` yet `--fix` errored with `no plugin matches
+  plugin:foo`. The repair path now routes `plugin:` components
+  through the install service (`svc.Install(name, Force: true,
+  Yes: true)`), the same path `samuel install <name> --force`
+  uses. The post-fix re-check uses the matching dispatch, so the
+  rendered ✓/✗ marks now reflect the actual post-repair state.
+
+- **`samuel install --dry-run` no longer claims `✓ Installed`.**
+  rc.13 printed the same success line for dry-run as a real
+  install, which would mislead any user who forgot they passed the
+  flag (or any CI script that reads the line to confirm an
+  install). The dry-run path now renders `(dry-run) Would install
+  <name>@<version> (<kind>)` with `<N> would be granted` for the
+  capabilities line. The JSON envelope gains a `"dry_run": true`
+  field for machine consumers. Sync's `--dry-run` already did
+  this correctly; install now matches.
+
 ## [v2.0.0-rc.13] — `samuel init` ships gitignore rules for transient state
 
 ### Added

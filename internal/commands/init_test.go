@@ -585,6 +585,44 @@ func TestDoctor_PluginHealth_MissingSkillFile(t *testing.T) {
 	}
 }
 
+func TestDoctor_Fix_RepairsPluginViaInstallService(t *testing.T) {
+	// Regression for issue #8: rc.11 added plugin: checks but
+	// attemptFix only knew about orchestrator plugins. A corrupted
+	// plugin was reported as "1 fixable" yet `samuel doctor --fix`
+	// errored with "could not fix plugin:foo: [doctor] no plugin
+	// matches plugin:foo". Now plugin: components route through the
+	// install service, so the error message must change — even if
+	// the actual install fails in this unit-test env (no real
+	// registry, fixture has no remote source), the regression we
+	// protect against is the "no plugin matches" dispatch path.
+	_, project := withHomeAndProject(t)
+	captureOutput(t)
+	ResetFlagsForTest()
+	rootCmd.SetArgs([]string{"init", ".", "--yes", "--minimal"})
+	if err := rootCmd.Execute(); err != nil {
+		t.Fatalf("init: %v", err)
+	}
+	installFixturePlugin(t, project, "foo", "1.0.0")
+	if err := os.Remove(filepath.Join(project, ".samuel", "plugins", "foo", "SKILL.md")); err != nil {
+		t.Fatal(err)
+	}
+
+	out, _ := captureOutput(t)
+	ResetFlagsForTest()
+	rootCmd.SetArgs([]string{"doctor", "--fix"})
+	_ = rootCmd.Execute() // errors from --fix attempts are reported via ui.Warn, not returned
+
+	text := out.String()
+	if strings.Contains(text, "no plugin matches plugin:foo") {
+		t.Errorf("doctor --fix still using the orchestrator dispatch for plugin: components; got %q", text)
+	}
+	// Sanity: doctor still surfaced plugin:foo as failed (we didn't
+	// accidentally drop the check during the dispatch swap).
+	if !strings.Contains(text, "plugin:foo") {
+		t.Errorf("doctor output missing plugin:foo entirely; got %q", text)
+	}
+}
+
 func TestDoctor_PluginHealth_NoLockfileNoChecks(t *testing.T) {
 	// Project initialized but no plugins installed: doctor should not
 	// surface any plugin: checks (silent is correct here).

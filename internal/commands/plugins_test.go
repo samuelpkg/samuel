@@ -122,6 +122,50 @@ func TestCLI_InstallSkill_HappyPath(t *testing.T) {
 	}
 }
 
+func TestCLI_InstallDryRun_DoesNotClaimInstalled(t *testing.T) {
+	// Regression for issue #9: rc.13 install --dry-run printed
+	// `✓ Installed go-guide@1.0.0` even though nothing was written.
+	// A user reading the output would conclude the install happened.
+	// The dry-run path now uses `(dry-run) Would install …`.
+	defer pinTestEnv(t)()
+	src := writeSkillFixture(t)
+	idx := writeRegistryFixture(t, map[string]registry.Plugin{
+		"go-guide": {Repo: "file://" + src, Latest: "1.0.0", Kind: "skill"},
+	})
+	proj := setupProject(t)
+	if err := os.Chdir(proj); err != nil {
+		t.Fatal(err)
+	}
+	testRegistrySources = []registry.Source{{Name: "test", URL: "file://" + idx}}
+	testPrompt = capability.AutoYes
+	defer func() { testRegistrySources = nil; testPrompt = nil }()
+
+	out := &bytes.Buffer{}
+	ui.SetWriters(out, out)
+	defer ui.SetWriters(os.Stdout, os.Stderr)
+
+	rootCmd.SetArgs([]string{"install", "go-guide", "--allow-unsigned", "--dry-run"})
+	if err := rootCmd.Execute(); err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+
+	text := out.String()
+	if strings.Contains(text, "✓ Installed go-guide") {
+		t.Errorf("dry-run output wrongly claims `Installed`; got %q", text)
+	}
+	if !strings.Contains(text, "(dry-run)") {
+		t.Errorf("dry-run output should mark itself; got %q", text)
+	}
+	if !strings.Contains(text, "Would install go-guide") {
+		t.Errorf("dry-run output should preview the install; got %q", text)
+	}
+
+	// Side-effect assertion: nothing was actually installed.
+	if _, err := os.Stat(filepath.Join(proj, ".samuel", "plugins", "go-guide")); !os.IsNotExist(err) {
+		t.Errorf("dry-run should not write plugin dir; got err=%v", err)
+	}
+}
+
 func TestCLI_InstallSkill_VersionRange(t *testing.T) {
 	defer pinTestEnv(t)()
 	src := writeSkillFixture(t)

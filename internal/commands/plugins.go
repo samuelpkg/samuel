@@ -183,7 +183,24 @@ func runInstall(cmd *cobra.Command, args []string) error {
 			"grants":   describeGrants(res.Grants),
 			"verified": res.Verified.Verified,
 			"reason":   res.Verified.Reason,
+			"dry_run":  dryRun,
 		})
+		return nil
+	}
+	// Dry-run rendering distinguishes itself from a real install. The
+	// resolve + verify steps DO run (we want to surface signature
+	// policy decisions before the user commits), but no files are
+	// written, so the success line must not claim "Installed" — that
+	// erodes trust in CLI output (issue #9).
+	if dryRun {
+		ui.Info("(dry-run) Would install %s@%s (%s)", res.Name, res.Version, res.Kind)
+		if res.Digest != "" {
+			ui.ListItem(1, "digest: %s", res.Digest)
+		}
+		if len(res.Grants) > 0 {
+			ui.ListItem(1, "capabilities: %d would be granted", len(res.Grants))
+		}
+		ui.ListItem(1, "signature: %s", verify.Describe(res.Verified))
 		return nil
 	}
 	ui.Success("Installed %s@%s (%s)", res.Name, res.Version, res.Kind)

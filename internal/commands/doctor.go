@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/samuelpkg/samuel/internal/errors"
 	"github.com/samuelpkg/samuel/internal/plugin"
 	"github.com/samuelpkg/samuel/internal/plugin/manifest"
+	"github.com/samuelpkg/samuel/internal/plugin/service"
 	"github.com/samuelpkg/samuel/internal/plugin/verify"
 	"github.com/samuelpkg/samuel/internal/ui"
 )
@@ -103,12 +105,23 @@ func runDoctor(cmd *cobra.Command, _ []string) error {
 			}
 			checks[i].Fixed = fixed
 			if fixed {
-				// Re-check post-fix.
-				switch c.Component {
-				case "project-layout":
+				// Re-check post-fix. plugin: components go through the
+				// same install-service dispatch attemptFix uses (issue
+				// #8 follow-up — without this, the rendered ✗ stays
+				// even though `N fixed` is reported in the summary).
+				switch {
+				case c.Component == "project-layout":
 					if pc, ok := checkProjectLayout(); ok {
 						checks[i].OK = pc.OK
 						checks[i].Message = pc.Message
+					}
+				case strings.HasPrefix(c.Component, "plugin:"):
+					for _, recheck := range checkInstalledPlugins() {
+						if recheck.Component == c.Component {
+							checks[i].OK = recheck.OK
+							checks[i].Message = recheck.Message
+							break
+						}
 					}
 				default:
 					for _, s := range o.Doctor(ctx) {
@@ -160,7 +173,29 @@ func attemptFix(ctx context.Context, o orchestratorIface, component string) (boo
 		}
 		return true, nil
 	}
-	// Otherwise: re-run Install on the matching plugin.
+	// Plugin-tier components (e.g. "plugin:actix-web") live in
+	// samuel.lock and are repaired by re-running the install service,
+	// not the orchestrator. rc.11 added the checks but rc.13's
+	// attemptFix only knew about orchestrator plugins — the user got
+	// "1 fixable" with no actual fix path (issue #8).
+	if name, ok := strings.CutPrefix(component, "plugin:"); ok {
+		cwd, err := os.Getwd()
+		if err != nil {
+			return false, err
+		}
+		svc, err := buildService(cwd)
+		if err != nil {
+			return false, err
+		}
+		_, err = svc.Install(ctx, service.InstallOptions{
+			Name:  name,
+			Force: true,
+			Yes:   true, // non-interactive recovery — capabilities already trusted in samuel.lock
+		})
+		return err == nil, err
+	}
+	// Otherwise: re-run Install on the matching orchestrator plugin
+	// (framework tier — samuel-builtins).
 	for _, p := range o.Plugins() {
 		if p.Name() != component {
 			continue
