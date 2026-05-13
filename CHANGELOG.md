@@ -7,6 +7,26 @@ this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v2.0.0-rc.6] — Plugin install fetcher: v-prefix tag fallback
+
+### Fixed
+
+- **`samuel install <plugin>` now resolves `vX.Y.Z` repo tags from
+  bare-semver registry refs.** Every plugin in the official registry
+  publishes `latest = "1.0.0"` (no v prefix), but the corresponding
+  plugin repos tag releases as `v1.0.0` (Go / goreleaser convention).
+  rc.5's fetcher passed the ref verbatim to `git clone --branch`, so
+  every install attempt failed with `fatal: Remote branch 1.0.0 not
+  found in upstream origin` — the registry → install path was
+  end-to-end broken against the real plugin ecosystem.
+
+  The fetcher now retries the clone with a `v` prefix when (a) the ref
+  looks like a bare semver and (b) the first attempt failed
+  specifically with a missing-ref error. Other failure modes (network,
+  auth, permissions) surface immediately so they aren't masked by a
+  spurious retry. New unit tests cover both the fallback path and the
+  exact-ref path.
+
 ## [v2.0.0-rc.5] — Translator default-on fix
 
 ### Fixed

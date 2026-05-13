@@ -127,29 +127,81 @@ func fetchGit(ctx context.Context, req FetchRequest, cloneURL string) (*Fetched,
 		}
 	}
 	dest := filepath.Join(parent, "src")
-	args := []string{"clone", "--depth=1"}
-	if req.Ref != "" {
-		args = append(args, "--branch", req.Ref)
+
+	// Plugin repos in the wild tag releases as `vX.Y.Z` (Go / goreleaser
+	// convention), but registry entries commonly publish the bare
+	// `X.Y.Z` version. When the requested ref looks like a bare semver
+	// and the first clone fails to find it, retry with a `v` prefix.
+	// This is the semver-equivalence policy go modules adopted; keeping
+	// it server-side here means registries don't have to mirror the
+	// `v`-prefix bookkeeping.
+	candidates := []string{req.Ref}
+	if alt := vPrefixedSemver(req.Ref); alt != "" {
+		candidates = append(candidates, alt)
 	}
-	args = append(args, cloneURL, dest)
-	cmd := exec.CommandContext(ctx, "git", args...)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		return nil, (&errors.Error{
-			Component:   Component,
-			Problem:     "git clone failed",
-			Cause:       fmt.Sprintf("%s: %s", err, strings.TrimSpace(string(out))),
-			Recoverable: true,
-		}).Wrap(err)
+
+	var lastOut []byte
+	var lastErr error
+	for _, ref := range candidates {
+		_ = os.RemoveAll(dest)
+		args := []string{"clone", "--depth=1"}
+		if ref != "" {
+			args = append(args, "--branch", ref)
+		}
+		args = append(args, cloneURL, dest)
+		cmd := exec.CommandContext(ctx, "git", args...)
+		out, err := cmd.CombinedOutput()
+		if err == nil {
+			root := dest
+			if req.Subpath != "" {
+				root = filepath.Join(dest, req.Subpath)
+			}
+			return &Fetched{
+				Root:    root,
+				Cleanup: func() { _ = os.RemoveAll(parent) },
+			}, nil
+		}
+		lastOut, lastErr = out, err
+		// Only fall through to the v-prefix retry on the "ref not
+		// found" failure mode — every other failure (network, auth,
+		// permissions) is reported as-is to avoid masking real issues.
+		if !isRefNotFoundOutput(out) {
+			break
+		}
 	}
-	root := dest
-	if req.Subpath != "" {
-		root = filepath.Join(dest, req.Subpath)
+	_ = os.RemoveAll(parent)
+	return nil, (&errors.Error{
+		Component:   Component,
+		Problem:     "git clone failed",
+		Cause:       fmt.Sprintf("%s: %s", lastErr, strings.TrimSpace(string(lastOut))),
+		Recoverable: true,
+	}).Wrap(lastErr)
+}
+
+// vPrefixedSemver returns "v"+ref when ref looks like a bare semver and
+// does not already start with v. Returns "" otherwise. The check is
+// intentionally lenient (any digit-led ref with at least one dot) so
+// pre-release / build-metadata suffixes round-trip.
+func vPrefixedSemver(ref string) string {
+	if ref == "" || strings.HasPrefix(ref, "v") || strings.HasPrefix(ref, "V") {
+		return ""
 	}
-	return &Fetched{
-		Root:    root,
-		Cleanup: func() { _ = os.RemoveAll(parent) },
-	}, nil
+	if ref[0] < '0' || ref[0] > '9' {
+		return ""
+	}
+	if !strings.Contains(ref, ".") {
+		return ""
+	}
+	return "v" + ref
+}
+
+// isRefNotFoundOutput reports whether the git clone failure was a
+// missing-ref error rather than a network/auth/host failure. Used to
+// gate the v-prefix retry — only retry when the ref itself is what
+// failed, otherwise surface the real problem immediately.
+func isRefNotFoundOutput(out []byte) bool {
+	s := strings.ToLower(string(out))
+	return strings.Contains(s, "remote branch") && strings.Contains(s, "not found")
 }
 
 // CopyTree copies src into dst recursively, preserving file mode bits.
