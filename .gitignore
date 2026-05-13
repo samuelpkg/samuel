@@ -37,6 +37,7 @@ Thumbs.db
 # of these from the tracked samuel.toml + samuel.lock-less state.
 examples/*/CLAUDE.md
 examples/*/samuel.lock
+examples/*/.samuel/lock
 examples/*/.samuel/builtins/
 examples/*/.samuel/plugins/
 examples/*/.samuel/run/
