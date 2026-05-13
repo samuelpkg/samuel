@@ -108,12 +108,21 @@ func Defaults() *Config {
 }
 
 // Lockfile models samuel.lock.
+//
+// Two record sets coexist in the lockfile:
+//   - Plugins: resolved-version + digest entries (PRD 0001 schema, used
+//     by the registry / version resolver).
+//   - Mutations: an append-only audit log written by the orchestrator
+//     during Install / Uninstall (PRD 0002). Each entry mirrors a
+//     plugin.Mutation so `samuel uninstall` can reverse what was applied
+//     without rerunning Detect on every plugin.
 type Lockfile struct {
-	Version      string         `toml:"version"`
-	GeneratedAt  string         `toml:"generated_at,omitempty"`
-	TOONSpec     string         `toml:"toon_spec,omitempty"`
-	Plugins      []LockedPlugin `toml:"plugins,omitempty"`
-	Capabilities []string       `toml:"capabilities,omitempty"`
+	Version      string           `toml:"version"`
+	GeneratedAt  string           `toml:"generated_at,omitempty"`
+	TOONSpec     string           `toml:"toon_spec,omitempty"`
+	Plugins      []LockedPlugin   `toml:"plugins,omitempty"`
+	Mutations    []MutationRecord `toml:"mutations,omitempty"`
+	Capabilities []string         `toml:"capabilities,omitempty"`
 }
 
 // LockedPlugin is the resolved-version + signature record for one
@@ -126,4 +135,26 @@ type LockedPlugin struct {
 	Source       string   `toml:"source,omitempty"`
 	Capabilities []string `toml:"capabilities,omitempty"`
 	Signed       bool     `toml:"signed,omitempty"`
+}
+
+// MutationRecord is one entry in the lockfile's mutation audit log.
+// Each Install on a plugin appends one record per state change so the
+// orchestrator can reverse them on uninstall without rerunning Detect.
+//
+// Reverse functions are NOT serialized — the kind + path are enough for
+// `samuel uninstall` to dispatch the correct undo (delete file, remove
+// symlink, etc.). The schema is forward-compatible: unknown kinds in
+// older binaries are reported as skipped rather than fatal.
+type MutationRecord struct {
+	// Plugin is the component that produced this mutation
+	// (plugin.Plugin.Name()).
+	Plugin string `toml:"plugin"`
+	// Kind is the plugin.MutationKind string value.
+	Kind string `toml:"kind"`
+	// Path is the resource affected (file, symlink, dir, command name).
+	Path string `toml:"path"`
+	// Description is the human-readable note from plugin.Mutation.
+	Description string `toml:"description,omitempty"`
+	// AppliedAt is RFC3339 — when the orchestrator applied this entry.
+	AppliedAt string `toml:"applied_at,omitempty"`
 }

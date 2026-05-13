@@ -1,0 +1,410 @@
+package commands
+
+import (
+	"bytes"
+	"encoding/json"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/ar4mirez/samuel/internal/config"
+	"github.com/ar4mirez/samuel/internal/ui"
+)
+
+// withHomeAndProject sets HOME and cwd to fresh tempdirs and returns the
+// project directory. Ensures the orchestrator's lock + SamuelComponent
+// install land in a hermetic location.
+func withHomeAndProject(t *testing.T) (home, project string) {
+	t.Helper()
+	home = t.TempDir()
+	project = t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("XDG_CACHE_HOME", filepath.Join(home, ".cache"))
+	t.Chdir(project)
+	return home, project
+}
+
+// captureOutput swaps the ui package writers for buffers; resets on
+// cleanup so other tests aren't affected.
+func captureOutput(t *testing.T) (*bytes.Buffer, *bytes.Buffer) {
+	t.Helper()
+	out, errw := &bytes.Buffer{}, &bytes.Buffer{}
+	ui.SetWriters(out, errw)
+	t.Cleanup(func() { ui.SetWriters(os.Stdout, os.Stderr) })
+	return out, errw
+}
+
+func TestInit_CreatesProjectNameDir(t *testing.T) {
+	// Acceptance criterion: `samuel init my-project` creates
+	// my-project/ with samuel.toml, .samuel/, AGENTS.md, per-folder
+	// AGENTS.md.
+	home := t.TempDir()
+	parent := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Chdir(parent)
+	captureOutput(t)
+
+	ResetFlagsForTest()
+	cmd := rootCmd
+	cmd.SetArgs([]string{"init", "my-project", "--yes", "--minimal"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("init my-project: %v", err)
+	}
+	projDir := filepath.Join(parent, "my-project")
+	for _, p := range []string{
+		"samuel.toml",
+		"AGENTS.md",
+		".samuel/tasks",
+		".samuel/builtins/ralph/SKILL.md",
+		".samuel/plugins",
+	} {
+		if _, err := os.Stat(filepath.Join(projDir, p)); err != nil {
+			t.Errorf("expected %s, got %v", filepath.Join(projDir, p), err)
+		}
+	}
+}
+
+func TestInit_LockfileRecordsMutations(t *testing.T) {
+	// Acceptance criterion: samuel.lock records mutations from init.
+	_, project := withHomeAndProject(t)
+	captureOutput(t)
+
+	ResetFlagsForTest()
+	cmd := rootCmd
+	cmd.SetArgs([]string{"init", ".", "--yes", "--minimal"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("init: %v", err)
+	}
+	lf, err := config.LoadLock(project)
+	if err != nil {
+		t.Fatalf("LoadLock: %v", err)
+	}
+	if len(lf.Mutations) == 0 {
+		t.Fatalf("expected at least one mutation record in samuel.lock; got %+v", lf)
+	}
+	found := false
+	for _, m := range lf.Mutations {
+		if m.Plugin == "samuel-builtins" && m.Kind == "dir_created" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("samuel.lock should record samuel-builtins dir_created mutation; got %+v", lf.Mutations)
+	}
+}
+
+func TestInit_RootAGENTSMDRendersGuardrailsInline(t *testing.T) {
+	// Acceptance criterion: AGENTS.md template at root expands
+	// variables from samuel.toml (guardrails block rendered inline).
+	_, project := withHomeAndProject(t)
+	captureOutput(t)
+
+	ResetFlagsForTest()
+	cmd := rootCmd
+	cmd.SetArgs([]string{"init", ".", "--yes", "--minimal"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("init: %v", err)
+	}
+	body, err := os.ReadFile(filepath.Join(project, "AGENTS.md"))
+	if err != nil {
+		t.Fatalf("read AGENTS.md: %v", err)
+	}
+	s := string(body)
+	for _, want := range []string{
+		"## Guardrails",
+		"Max function lines: 50",
+		"Max file lines: 300",
+		"Tests required: true",
+		"Default methodology: `ralph`",
+		"Max iterations: 25",
+	} {
+		if !strings.Contains(s, want) {
+			t.Errorf("root AGENTS.md missing %q; body:\n%s", want, s)
+		}
+	}
+}
+
+func TestInit_EndToEnd_ProducesExpectedLayout(t *testing.T) {
+	_, project := withHomeAndProject(t)
+	captureOutput(t)
+
+	ResetFlagsForTest()
+	cmd := rootCmd
+	cmd.SetArgs([]string{"init", ".", "--yes", "--minimal"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("samuel init: %v", err)
+	}
+
+	for _, p := range []string{
+		"samuel.toml",
+		"AGENTS.md",
+		".samuel/tasks",
+		".samuel/builtins",
+		".samuel/plugins",
+		".samuel/README.md",
+		".samuel/builtins/ralph/SKILL.md",
+	} {
+		if _, err := os.Stat(filepath.Join(project, p)); err != nil {
+			t.Errorf("expected %s, got %v", p, err)
+		}
+	}
+	// AGENTS.md should NOT be a CLAUDE.md alias.
+	if _, err := os.Stat(filepath.Join(project, "CLAUDE.md")); !os.IsNotExist(err) {
+		t.Errorf("CLAUDE.md must not exist after init (v2 invariant)")
+	}
+	// AGENTS.md content should reference ralph methodology.
+	body, _ := os.ReadFile(filepath.Join(project, "AGENTS.md"))
+	if !strings.Contains(string(body), "ralph") {
+		t.Errorf("root AGENTS.md should mention ralph methodology; got %q", string(body))
+	}
+}
+
+func TestInit_RefusesInsideSamuelRepo(t *testing.T) {
+	home := t.TempDir()
+	project := t.TempDir()
+	t.Setenv("HOME", home)
+	// Seed the canary files that isSamuelRepository looks for.
+	if err := os.WriteFile(filepath.Join(project, "go.mod"), []byte("module github.com/ar4mirez/samuel\n"), 0o644); err != nil {
+		t.Fatalf("seed go.mod: %v", err)
+	}
+	canaryDir := filepath.Join(project, "internal", "builtins", "content", "ralph")
+	if err := os.MkdirAll(canaryDir, 0o755); err != nil {
+		t.Fatalf("seed canary dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(canaryDir, "SKILL.md"), []byte("---\nname: ralph\n---\n"), 0o644); err != nil {
+		t.Fatalf("seed canary skill: %v", err)
+	}
+	t.Chdir(project)
+	captureOutput(t)
+
+	ResetFlagsForTest()
+	cmd := rootCmd
+	cmd.SetArgs([]string{"init", ".", "--yes"})
+	err := cmd.Execute()
+	if err == nil {
+		t.Fatal("expected refusal inside samuel repo")
+	}
+	if !strings.Contains(err.Error(), "Samuel repository") {
+		t.Errorf("error should mention Samuel repository; got %v", err)
+	}
+}
+
+func TestInit_SecondRunReportsStatus(t *testing.T) {
+	_, project := withHomeAndProject(t)
+	captureOutput(t)
+	ResetFlagsForTest()
+	cmd := rootCmd
+	cmd.SetArgs([]string{"init", ".", "--yes", "--minimal"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("first init: %v", err)
+	}
+	// Mutate samuel.toml so we can detect the second run did NOT
+	// overwrite without --force.
+	tomlPath := filepath.Join(project, config.ProjectFile)
+	orig, _ := os.ReadFile(tomlPath)
+	stamped := append([]byte("# user-comment\n"), orig...)
+	if err := os.WriteFile(tomlPath, stamped, 0o644); err != nil {
+		t.Fatalf("seed comment: %v", err)
+	}
+	out, _ := captureOutput(t)
+	cmd.SetArgs([]string{"init", ".", "--yes"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("second init: %v", err)
+	}
+	post, _ := os.ReadFile(tomlPath)
+	if !bytes.HasPrefix(post, []byte("# user-comment\n")) {
+		t.Errorf("second init should not overwrite samuel.toml without --force")
+	}
+	if !strings.Contains(out.String(), "already initialized") {
+		t.Errorf("status output should mention already initialized; got %q", out.String())
+	}
+}
+
+func TestInit_JSONEnvelope(t *testing.T) {
+	_, project := withHomeAndProject(t)
+	out, _ := captureOutput(t)
+	ResetFlagsForTest()
+	cmd := rootCmd
+	cmd.SetArgs([]string{"init", ".", "--yes", "--minimal", "--json"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("init --json: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(project, "samuel.toml")); err != nil {
+		t.Errorf("init --json should still write samuel.toml; got %v", err)
+	}
+	var env struct {
+		SchemaVersion int            `json:"schemaVersion"`
+		Command       string         `json:"command"`
+		Success       bool           `json:"success"`
+		Data          map[string]any `json:"data"`
+	}
+	if err := json.Unmarshal(out.Bytes(), &env); err != nil {
+		t.Fatalf("json parse: %v\noutput: %s", err, out.String())
+	}
+	if !env.Success {
+		t.Errorf("expected Success=true; got %+v", env)
+	}
+	if env.Command != "init" {
+		t.Errorf("Command = %q, want init", env.Command)
+	}
+}
+
+func TestInit_NoClaudeFilesWrittenAnywhere(t *testing.T) {
+	home, project := withHomeAndProject(t)
+	captureOutput(t)
+	ResetFlagsForTest()
+	cmd := rootCmd
+	cmd.SetArgs([]string{"init", ".", "--yes", "--minimal"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("init: %v", err)
+	}
+	// Neither project nor home should have any .claude/* artifact.
+	for _, root := range []string{home, project} {
+		err := filepath.WalkDir(root, func(path string, _ os.DirEntry, _ error) error {
+			if strings.Contains(path, "/.claude") || strings.HasSuffix(path, "CLAUDE.md") {
+				t.Errorf(".claude artifact must not exist; found %s", path)
+			}
+			return nil
+		})
+		if err != nil {
+			t.Fatalf("walk %s: %v", root, err)
+		}
+	}
+}
+
+func TestDoctor_HealthyAfterInit(t *testing.T) {
+	_, project := withHomeAndProject(t)
+	captureOutput(t)
+
+	ResetFlagsForTest()
+	cmd := rootCmd
+	cmd.SetArgs([]string{"init", ".", "--yes", "--minimal"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("init: %v", err)
+	}
+	out, _ := captureOutput(t)
+	cmd.SetArgs([]string{"doctor", "--json"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("doctor: %v", err)
+	}
+	var env struct {
+		Data map[string]any `json:"data"`
+	}
+	if err := json.Unmarshal(out.Bytes(), &env); err != nil {
+		t.Fatalf("doctor json parse: %v\nout: %s", err, out.String())
+	}
+	checks, _ := env.Data["checks"].([]any)
+	if len(checks) == 0 {
+		t.Fatalf("doctor should report at least one check; got %+v", env.Data)
+	}
+	first, _ := checks[0].(map[string]any)
+	if ok, _ := first["ok"].(bool); !ok {
+		t.Errorf("post-init doctor should report healthy; got %+v", first)
+	}
+	_ = project
+}
+
+func TestDoctor_FixRepairsProjectBuiltins(t *testing.T) {
+	// Acceptance criterion: `samuel doctor --fix` repairs a project
+	// with manually deleted `.samuel/builtins/`. v2's PRD resolved the
+	// open question by using a copy (not a symlink); this test deletes
+	// the project copy directly.
+	_, project := withHomeAndProject(t)
+	captureOutput(t)
+
+	ResetFlagsForTest()
+	cmd := rootCmd
+	cmd.SetArgs([]string{"init", ".", "--yes", "--minimal"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("init: %v", err)
+	}
+	// Manually delete the project's .samuel/builtins/.
+	if err := os.RemoveAll(filepath.Join(project, ".samuel", "builtins")); err != nil {
+		t.Fatalf("delete project builtins: %v", err)
+	}
+	// Doctor without --fix reports the failure.
+	out, _ := captureOutput(t)
+	ResetFlagsForTest()
+	cmd.SetArgs([]string{"doctor", "--json"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("doctor: %v", err)
+	}
+	var env struct {
+		Data map[string]any `json:"data"`
+	}
+	if err := json.Unmarshal(out.Bytes(), &env); err != nil {
+		t.Fatalf("parse: %v\nout: %s", err, out.String())
+	}
+	summary, _ := env.Data["summary"].(map[string]any)
+	if int(summary["failed"].(float64)) == 0 {
+		t.Errorf("expected project-layout failure before --fix; got %+v", summary)
+	}
+	// --fix should re-mirror the project copy.
+	out, _ = captureOutput(t)
+	ResetFlagsForTest()
+	cmd.SetArgs([]string{"doctor", "--fix", "--json"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("doctor --fix: %v", err)
+	}
+	if err := json.Unmarshal(out.Bytes(), &env); err != nil {
+		t.Fatalf("parse after fix: %v", err)
+	}
+	summary, _ = env.Data["summary"].(map[string]any)
+	if int(summary["failed"].(float64)) != 0 {
+		t.Errorf("expected all checks to pass after --fix; got %+v", summary)
+	}
+	if _, err := os.Stat(filepath.Join(project, ".samuel", "builtins", "ralph", "SKILL.md")); err != nil {
+		t.Errorf("project .samuel/builtins should be restored after --fix; got %v", err)
+	}
+}
+
+func TestDoctor_FixRepairsMissingBuiltins(t *testing.T) {
+	home, project := withHomeAndProject(t)
+	captureOutput(t)
+
+	ResetFlagsForTest()
+	cmd := rootCmd
+	cmd.SetArgs([]string{"init", ".", "--yes", "--minimal"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("init: %v", err)
+	}
+	// Wipe the global builtins to simulate manual deletion.
+	if err := os.RemoveAll(filepath.Join(home, ".samuel", "builtins")); err != nil {
+		t.Fatalf("delete builtins: %v", err)
+	}
+	// Doctor without --fix should report failure.
+	out, _ := captureOutput(t)
+	cmd.SetArgs([]string{"doctor", "--json"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("doctor without fix: %v", err)
+	}
+	var env struct {
+		Data map[string]any `json:"data"`
+	}
+	if err := json.Unmarshal(out.Bytes(), &env); err != nil {
+		t.Fatalf("parse: %v\nout: %s", err, out.String())
+	}
+	summary, _ := env.Data["summary"].(map[string]any)
+	if int(summary["failed"].(float64)) == 0 {
+		t.Errorf("expected at least one failure pre-fix; got %+v", summary)
+	}
+	// Now run --fix; it should re-install and the next check should pass.
+	out, _ = captureOutput(t)
+	cmd.SetArgs([]string{"doctor", "--fix", "--json"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("doctor --fix: %v", err)
+	}
+	if err := json.Unmarshal(out.Bytes(), &env); err != nil {
+		t.Fatalf("parse after fix: %v", err)
+	}
+	summary, _ = env.Data["summary"].(map[string]any)
+	if int(summary["failed"].(float64)) != 0 {
+		t.Errorf("expected all checks to pass after --fix; got %+v", summary)
+	}
+	if _, err := os.Stat(filepath.Join(home, ".samuel", "builtins", "ralph", "SKILL.md")); err != nil {
+		t.Errorf("expected builtins restored after --fix; got %v", err)
+	}
+	_ = project
+}

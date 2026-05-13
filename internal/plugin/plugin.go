@@ -139,13 +139,14 @@ type Mutation struct {
 type MutationKind string
 
 const (
-	MutationFileWritten    MutationKind = "file_written"
-	MutationSymlinkCreated MutationKind = "symlink_created"
-	MutationDirCreated     MutationKind = "dir_created"
-	MutationCommandRun     MutationKind = "command_run"
-	MutationGitClone       MutationKind = "git_clone"
-	MutationOciPull        MutationKind = "oci_pull"
-	MutationWasmCache      MutationKind = "wasm_cache"
+	MutationFileWritten       MutationKind = "file_written"
+	MutationSymlinkCreated    MutationKind = "symlink_created"
+	MutationDirCreated        MutationKind = "dir_created"
+	MutationCommandRun        MutationKind = "command_run"
+	MutationGitClone          MutationKind = "git_clone"
+	MutationWasmLoaded        MutationKind = "wasm_loaded"
+	MutationOciPulled         MutationKind = "oci_pulled"
+	MutationLockEntryWritten  MutationKind = "lock_entry_written"
 )
 
 // HealthStatus is what Check returns; the orchestrator rolls all

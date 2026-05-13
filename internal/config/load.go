@@ -48,6 +48,9 @@ func Load(dir string) (*Config, error) {
 	if cfg.Version == "" {
 		cfg.Version = SchemaVersion
 	}
+	if vErr := cfg.Validate(); vErr != nil {
+		return cfg, vErr
+	}
 	return cfg, nil
 }
 

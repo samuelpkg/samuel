@@ -11,6 +11,7 @@ import (
 
 func executeRoot(t *testing.T, args ...string) (string, string, error) {
 	t.Helper()
+	ResetFlagsForTest()
 	out, errw := &bytes.Buffer{}, &bytes.Buffer{}
 	ui.SetWriters(out, errw)
 	t.Cleanup(func() { ui.SetWriters(nil, nil) })

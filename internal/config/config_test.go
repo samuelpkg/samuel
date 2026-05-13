@@ -62,11 +62,19 @@ func TestSave_AtomicRenamesOverExisting(t *testing.T) {
 	dir := t.TempDir()
 	first := Defaults()
 	first.DefaultMethodology = "first"
+	first.Methodology = map[string]Methodology{
+		"first":  {Enabled: true},
+		"second": {Enabled: true},
+	}
 	if err := Save(dir, first); err != nil {
 		t.Fatalf("Save first: %v", err)
 	}
 	second := Defaults()
 	second.DefaultMethodology = "second"
+	second.Methodology = map[string]Methodology{
+		"first":  {Enabled: true},
+		"second": {Enabled: true},
+	}
 	if err := Save(dir, second); err != nil {
 		t.Fatalf("Save second: %v", err)
 	}

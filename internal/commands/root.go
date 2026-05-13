@@ -5,6 +5,7 @@ package commands
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 var rootCmd = &cobra.Command{
@@ -55,3 +56,24 @@ func init() {
 	rootCmd.PersistentFlags().Bool("json", false, "Output JSON envelope for programmatic consumption")
 	rootCmd.PersistentFlags().Bool("no-deprecation", false, "Suppress legacy-command deprecation warnings (CI scripts)")
 }
+
+// ResetFlagsForTest restores every persistent and subcommand flag to
+// its declared default. Cobra reuses the same singleton between
+// rootCmd.Execute() calls, so values from a previous invocation leak
+// into the next unless we explicitly clear them. Production code never
+// runs Execute twice; tests do, all the time.
+func ResetFlagsForTest() {
+	rootCmd.PersistentFlags().VisitAll(func(f *pflagFlag) {
+		_ = f.Value.Set(f.DefValue)
+		f.Changed = false
+	})
+	for _, sub := range rootCmd.Commands() {
+		sub.Flags().VisitAll(func(f *pflagFlag) {
+			_ = f.Value.Set(f.DefValue)
+			f.Changed = false
+		})
+	}
+}
+
+// pflagFlag is the cobra/pflag flag struct alias used by ResetFlagsForTest.
+type pflagFlag = pflag.Flag

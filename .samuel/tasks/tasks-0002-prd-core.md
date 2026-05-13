@@ -13,99 +13,99 @@
 
 ## Tasks
 
-- [ ] 1.0 Mutation log + reverse types [~2,500 tokens - Simple]
-  - [ ] 1.1 Define `Mutation` struct with `Kind`, `Path`, `Description`, `Reverse func(ctx) error`
-  - [ ] 1.2 Define `MutationKind` enum: `file_written`, `symlink_created`, `dir_created`, `command_run`, `git_clone`, `wasm_loaded`, `oci_pulled`, `lock_entry_written`
-  - [ ] 1.3 Define `samuel.lock` mutation-record schema (TOML)
-  - [ ] 1.4 Implement lockfile reader/writer at `internal/lock/lockfile.go` (separate from advisory lock from PRD 0001)
-  - [ ] 1.5 Unit tests for mutation serialization round-trip
+- [x] 1.0 Mutation log + reverse types [~2,500 tokens - Simple]
+  - [x] 1.1 Define `Mutation` struct with `Kind`, `Path`, `Description`, `Reverse func(ctx) error`
+  - [x] 1.2 Define `MutationKind` enum: `file_written`, `symlink_created`, `dir_created`, `command_run`, `git_clone`, `wasm_loaded`, `oci_pulled`, `lock_entry_written`
+  - [x] 1.3 Define `samuel.lock` mutation-record schema (TOML)
+  - [x] 1.4 Implement lockfile reader/writer at `internal/lock/lockfile.go` (separate from advisory lock from PRD 0001)
+  - [x] 1.5 Unit tests for mutation serialization round-trip
 
-- [ ] 2.0 Orchestrator core [~6,000 tokens - Complex]
-  - [ ] 2.1 Define `Orchestrator` struct + `New(components ...Plugin) *Orchestrator` constructor
-  - [ ] 2.2 Implement `WithHomeDir(home string)` for test injection
-  - [ ] 2.3 Implement `Install(ctx, InstallOptions)` — declared order, mutation collection, lock acquired (skipped in DryRun)
-  - [ ] 2.4 Implement rollback-on-failure with **fresh context** (`rollbackTimeout = 30s`)
-  - [ ] 2.5 Implement `Uninstall(ctx, UninstallOptions)` — reverse order, best-effort, `errors.Join`
-  - [ ] 2.6 Implement `Doctor(ctx)` — runs `Check` per plugin, **no lock**
-  - [ ] 2.7 Wrap with `*Error{Recoverable: false, DocsURL: ".../SAM-ROLLBACK-001"}` when both install and rollback fail
-  - [ ] 2.8 Write orchestrator_test.go — happy path, single-failure rollback, double-failure (install+rollback) wrap, dry-run-no-mutation, doctor-no-lock
+- [x] 2.0 Orchestrator core [~6,000 tokens - Complex]
+  - [x] 2.1 Define `Orchestrator` struct + `New(components ...Plugin) *Orchestrator` constructor
+  - [x] 2.2 Implement `WithHomeDir(home string)` for test injection
+  - [x] 2.3 Implement `Install(ctx, InstallOptions)` — declared order, mutation collection, lock acquired (skipped in DryRun)
+  - [x] 2.4 Implement rollback-on-failure with **fresh context** (`rollbackTimeout = 30s`)
+  - [x] 2.5 Implement `Uninstall(ctx, UninstallOptions)` — reverse order, best-effort, `errors.Join`
+  - [x] 2.6 Implement `Doctor(ctx)` — runs `Check` per plugin, **no lock**
+  - [x] 2.7 Wrap with `*Error{Recoverable: false, DocsURL: ".../SAM-ROLLBACK-001"}` when both install and rollback fail
+  - [x] 2.8 Write orchestrator_test.go — happy path, single-failure rollback, double-failure (install+rollback) wrap, dry-run-no-mutation, doctor-no-lock
 
-- [ ] 3.0 Embedded built-in skills [~3,500 tokens - Medium]
-  - [ ] 3.1 Create `internal/builtins/content/` directory structure
-  - [ ] 3.2 Author placeholder SKILL.md files: `ralph/` (methodology), `create-skill/` (skill scaffolding), `sync/` (per-folder generator), `generate-agents-md/` (folded into sync)
-  - [ ] 3.3 Each SKILL.md follows Agent Skills standard (YAML frontmatter per RFD 0001's manifest fields + body)
-  - [ ] 3.4 Add `internal/builtins/embed.go` with `//go:embed all:content` and `FS()` helper
-  - [ ] 3.5 Add tests verifying embed.FS contains expected entries
+- [x] 3.0 Embedded built-in skills [~3,500 tokens - Medium]
+  - [x] 3.1 Create `internal/builtins/content/` directory structure
+  - [x] 3.2 Author placeholder SKILL.md files: `ralph/` (methodology), `create-skill/` (skill scaffolding), `sync/` (per-folder generator), `generate-agents-md/` (folded into sync)
+  - [x] 3.3 Each SKILL.md follows Agent Skills standard (YAML frontmatter per RFD 0001's manifest fields + body)
+  - [x] 3.4 Add `internal/builtins/embed.go` with `//go:embed all:content` and `FS()` helper
+  - [x] 3.5 Add tests verifying embed.FS contains expected entries
 
-- [ ] 4.0 SamuelComponent (first concrete plugin) [~6,500 tokens - Complex]
-  - [ ] 4.1 Port `SamuelComponent` struct from `samuel_v1/internal/orchestrator/component_samuel.go`
-  - [ ] 4.2 Update sync target: `~/.samuel/builtins/` (was `~/.claude/skills/samuel/`)
-  - [ ] 4.3 Implement `Detect` — check global path + non-empty directory check
-  - [ ] 4.4 Implement `Install` with content-hash idempotency (SHA-256 over path + bytes) and atomic swap (sibling tmp dir + rename + backup-restore)
-  - [ ] 4.5 Port `syncFS` with path-traversal defense (`filepath.IsLocal`)
-  - [ ] 4.6 Implement `Check` — global tree present + non-empty
-  - [ ] 4.7 Implement `Uninstall` — remove global tree, log mutations
-  - [ ] 4.8 Implement `Manifest()` returning synthetic builtin manifest (`kind = "builtin"`)
-  - [ ] 4.9 Compile-time check `var _ plugin.Plugin = (*SamuelComponent)(nil)`
-  - [ ] 4.10 Write component_samuel_test.go using `fstest.MapFS` for hermetic tests
+- [x] 4.0 SamuelComponent (first concrete plugin) [~6,500 tokens - Complex]
+  - [x] 4.1 Port `SamuelComponent` struct from `samuel_v1/internal/orchestrator/component_samuel.go`
+  - [x] 4.2 Update sync target: `~/.samuel/builtins/` (was `~/.claude/skills/samuel/`)
+  - [x] 4.3 Implement `Detect` — check global path + non-empty directory check
+  - [x] 4.4 Implement `Install` with content-hash idempotency (SHA-256 over path + bytes) and atomic swap (sibling tmp dir + rename + backup-restore)
+  - [x] 4.5 Port `syncFS` with path-traversal defense (`filepath.IsLocal`)
+  - [x] 4.6 Implement `Check` — global tree present + non-empty
+  - [x] 4.7 Implement `Uninstall` — remove global tree, log mutations
+  - [x] 4.8 Implement `Manifest()` returning synthetic builtin manifest (`kind = "builtin"`)
+  - [x] 4.9 Compile-time check `var _ plugin.Plugin = (*SamuelComponent)(nil)`
+  - [x] 4.10 Write component_samuel_test.go using `fstest.MapFS` for hermetic tests
 
-- [ ] 5.0 Sync (per-folder AGENTS.md) [~5,000 tokens - Medium]
-  - [ ] 5.1 Port `samuel_v1/internal/core/sync.go` to `internal/sync/sync.go`
-  - [ ] 5.2 **Drop CLAUDE.md emission.** Only `WriteFolderContext` writes AGENTS.md
-  - [ ] 5.3 Preserve autogen marker convention (`<!-- Auto-generated by Samuel`)
-  - [ ] 5.4 Port `extensionLanguageMap`, `folderPurposeMap`, `keyFileDescriptions`, `skipDirSet` defaults
-  - [ ] 5.5 Make maps user-overridable via `samuel.toml [sync.*]` sections
-  - [ ] 5.6 Define hook point stubs in `internal/sync/hooks.go` (`sync.before`, `sync.analyze-folder`, `sync.write-agents-md`, `sync.after`) — bodies arrive in PRD 0004
-  - [ ] 5.7 Write sync_test.go against fixture project tree (mixed languages, hidden dirs, user-customized files with/without autogen marker)
+- [x] 5.0 Sync (per-folder AGENTS.md) [~5,000 tokens - Medium]
+  - [x] 5.1 Port `samuel_v1/internal/core/sync.go` to `internal/sync/sync.go`
+  - [x] 5.2 **Drop CLAUDE.md emission.** Only `WriteFolderContext` writes AGENTS.md
+  - [x] 5.3 Preserve autogen marker convention (`<!-- Auto-generated by Samuel`)
+  - [x] 5.4 Port `extensionLanguageMap`, `folderPurposeMap`, `keyFileDescriptions`, `skipDirSet` defaults
+  - [x] 5.5 Make maps user-overridable via `samuel.toml [sync.*]` sections
+  - [x] 5.6 Define hook point stubs in `internal/sync/hooks.go` (`sync.before`, `sync.analyze-folder`, `sync.write-agents-md`, `sync.after`) — bodies arrive in PRD 0004
+  - [x] 5.7 Write sync_test.go against fixture project tree (mixed languages, hidden dirs, user-customized files with/without autogen marker)
 
-- [ ] 6.0 samuel init command [~5,500 tokens - Complex]
-  - [ ] 6.1 Define `initFlags` struct + `parseInitFlags(cmd, args)`
-  - [ ] 6.2 Implement Samuel-repo detection (refuse to init inside Samuel's own repo)
-  - [ ] 6.3 Implement `validateInitTarget` — directory creation, force flag, existing samuel.toml detection
-  - [ ] 6.4 Implement `displayAndConfirm` (interactive via `huh`; skipped with `--yes` or `--non-interactive`)
-  - [ ] 6.5 Run SamuelComponent.Install via orchestrator
-  - [ ] 6.6 Run initial sync (writes root + per-folder AGENTS.md)
-  - [ ] 6.7 Write `samuel.toml` with defaults (calls config.Save)
-  - [ ] 6.8 Implement smart bare invocation — already-initialized project shows status, exits 0
-  - [ ] 6.9 Implement `--minimal` flag (skips starter pack hint; starter pack itself ships in PRD 0005)
-  - [ ] 6.10 Implement `--force` flag (overwrites existing files)
-  - [ ] 6.11 Implement `--json` output via JSONMode
-  - [ ] 6.12 Detect existing v1 `CLAUDE.md`; warn without modifying
+- [x] 6.0 samuel init command [~5,500 tokens - Complex]
+  - [x] 6.1 Define `initFlags` struct + `parseInitFlags(cmd, args)`
+  - [x] 6.2 Implement Samuel-repo detection (refuse to init inside Samuel's own repo)
+  - [x] 6.3 Implement `validateInitTarget` — directory creation, force flag, existing samuel.toml detection
+  - [x] 6.4 Implement `displayAndConfirm` (interactive via `huh`; skipped with `--yes` or `--non-interactive`)
+  - [x] 6.5 Run SamuelComponent.Install via orchestrator
+  - [x] 6.6 Run initial sync (writes root + per-folder AGENTS.md)
+  - [x] 6.7 Write `samuel.toml` with defaults (calls config.Save)
+  - [x] 6.8 Implement smart bare invocation — already-initialized project shows status, exits 0
+  - [x] 6.9 Implement `--minimal` flag (skips starter pack hint; starter pack itself ships in PRD 0005)
+  - [x] 6.10 Implement `--force` flag (overwrites existing files)
+  - [x] 6.11 Implement `--json` output via JSONMode
+  - [x] 6.12 Detect existing v1 `CLAUDE.md`; warn without modifying
 
-- [ ] 7.0 samuel doctor command [~4,000 tokens - Medium]
-  - [ ] 7.1 Implement `doctorCmd` with `--fix` and `--json` flags
-  - [ ] 7.2 Call `Orchestrator.Doctor(ctx)` and convert each HealthStatus to a checkResult
-  - [ ] 7.3 Render per-check ✓/✗ output via ui helpers
-  - [ ] 7.4 Print summary (passed, failed, fixable counts)
-  - [ ] 7.5 Implement `--fix` mode — re-create missing dirs, re-run Install on Detect=false plugins
-  - [ ] 7.6 Detect unmanaged v1 `~/.claude/skills/` content; report informational
-  - [ ] 7.7 Detect available coding-assistant binaries on PATH; suggest matching translator plugins per RFD 0002 §1
-  - [ ] 7.8 Write doctor_test.go using fake plugins with controllable health
+- [x] 7.0 samuel doctor command [~4,000 tokens - Medium]
+  - [x] 7.1 Implement `doctorCmd` with `--fix` and `--json` flags
+  - [x] 7.2 Call `Orchestrator.Doctor(ctx)` and convert each HealthStatus to a checkResult
+  - [x] 7.3 Render per-check ✓/✗ output via ui helpers
+  - [x] 7.4 Print summary (passed, failed, fixable counts)
+  - [x] 7.5 Implement `--fix` mode — re-create missing dirs, re-run Install on Detect=false plugins
+  - [x] 7.6 Detect unmanaged v1 `~/.claude/skills/` content; report informational
+  - [x] 7.7 Detect available coding-assistant binaries on PATH; suggest matching translator plugins per RFD 0002 §1
+  - [x] 7.8 Write doctor_test.go using fake plugins with controllable health
 
-- [ ] 8.0 samuel sync command [~3,000 tokens - Medium]
-  - [ ] 8.1 Implement `syncCmd` with `--dry-run`, `--force`, `--max-depth`, `--json` flags
-  - [ ] 8.2 Wrap `internal/sync/sync.SyncFolderContext` with the appropriate options
-  - [ ] 8.3 Implement smart bare invocation — preview when uninitialized, run when initialized
-  - [ ] 8.4 Render created/updated/skipped/errored counts in human + JSON output
+- [x] 8.0 samuel sync command [~3,000 tokens - Medium]
+  - [x] 8.1 Implement `syncCmd` with `--dry-run`, `--force`, `--max-depth`, `--json` flags
+  - [x] 8.2 Wrap `internal/sync/sync.SyncFolderContext` with the appropriate options
+  - [x] 8.3 Implement smart bare invocation — preview when uninitialized, run when initialized
+  - [x] 8.4 Render created/updated/skipped/errored counts in human + JSON output
 
-- [ ] 9.0 samuel.toml schema validation [~2,000 tokens - Simple]
-  - [ ] 9.1 Validate required fields on Load
-  - [ ] 9.2 Validate `default_methodology` resolves to an installed methodology (or `ralph` builtin)
-  - [ ] 9.3 Validate `[[plugins]]` entries have valid `kind` enum values
-  - [ ] 9.4 Surface validation errors via structured `*Error`
+- [x] 9.0 samuel.toml schema validation [~2,000 tokens - Simple]
+  - [x] 9.1 Validate required fields on Load
+  - [x] 9.2 Validate `default_methodology` resolves to an installed methodology (or `ralph` builtin)
+  - [x] 9.3 Validate `[[plugins]]` entries have valid `kind` enum values
+  - [x] 9.4 Surface validation errors via structured `*Error`
 
-- [ ] 10.0 .samuel/ project layout writer [~1,500 tokens - Simple]
-  - [ ] 10.1 Create `.samuel/tasks/`, `.samuel/builtins/`, `.samuel/plugins/` on init (some empty placeholders)
-  - [ ] 10.2 Document layout in generated `.samuel/README.md`
+- [x] 10.0 .samuel/ project layout writer [~1,500 tokens - Simple]
+  - [x] 10.1 Create `.samuel/tasks/`, `.samuel/builtins/`, `.samuel/plugins/` on init (some empty placeholders)
+  - [x] 10.2 Document layout in generated `.samuel/README.md`
 
-- [ ] 11.0 Tests + smoke verification [~3,000 tokens - Medium]
-  - [ ] 11.1 Build `FakePlugin` test type with configurable Detect/Install/Check/Uninstall behavior + failure injection
-  - [ ] 11.2 Integration test: end-to-end `samuel init` in temp dir produces expected layout
-  - [ ] 11.3 Integration test: `samuel init` refuses inside the Samuel source repo
-  - [ ] 11.4 Integration test: `samuel doctor` reports healthy after init
-  - [ ] 11.5 Integration test: manually delete builtins dir; `samuel doctor --fix` repairs
-  - [ ] 11.6 Verify no `.claude/` files written by any command (agnostic invariant check)
+- [x] 11.0 Tests + smoke verification [~3,000 tokens - Medium]
+  - [x] 11.1 Build `FakePlugin` test type with configurable Detect/Install/Check/Uninstall behavior + failure injection
+  - [x] 11.2 Integration test: end-to-end `samuel init` in temp dir produces expected layout
+  - [x] 11.3 Integration test: `samuel init` refuses inside the Samuel source repo
+  - [x] 11.4 Integration test: `samuel doctor` reports healthy after init
+  - [x] 11.5 Integration test: manually delete builtins dir; `samuel doctor --fix` repairs
+  - [x] 11.6 Verify no `.claude/` files written by any command (agnostic invariant check)
 
-- [ ] 12.0 Tag alpha.2 [~1,000 tokens - Simple]
-  - [ ] 12.1 Update CHANGELOG with alpha.2 entry
-  - [ ] 12.2 Tag `v2.0.0-alpha.2`; smoke-test on clean macOS/Linux
+- [x] 12.0 Tag alpha.2 [~1,000 tokens - Simple]
+  - [x] 12.1 Update CHANGELOG with alpha.2 entry
+  - [x] 12.2 Tag `v2.0.0-alpha.2`; smoke-test on clean macOS/Linux

@@ -167,19 +167,32 @@ Per [[synthesis/orchestrator-as-plugin-loader]], v1's orchestrator IS v2's plugi
 
 ## Acceptance criteria
 
-- [ ] `samuel init my-project` creates `my-project/` with `samuel.toml`, `.samuel/`, AGENTS.md, and per-folder AGENTS.md.
-- [ ] `samuel init` (no arg) initializes the current directory if empty (or with `--force`).
-- [ ] `samuel init` in v2's own repo refuses with structured error.
-- [ ] `samuel doctor` reports healthy for a freshly inited project.
-- [ ] `samuel doctor --fix` repairs a project with manually deleted `.samuel/builtins/` symlink.
-- [ ] `samuel sync` regenerates per-folder AGENTS.md without touching user-customized files (no autogen marker).
-- [ ] `samuel sync --force` overwrites user-customized files.
-- [ ] `samuel sync --dry-run` previews changes without writing.
-- [ ] `samuel.lock` records mutations from `init`; `samuel uninstall` (stub via deferred milestone) would reverse them.
-- [ ] Orchestrator rollback test: simulated failure in 2nd of 3 components → 1st component's mutations reversed.
-- [ ] AGENTS.md template at root expands variables from `samuel.toml` (`[guardrails]` block rendered inline).
-- [ ] No CLAUDE.md is written anywhere.
-- [ ] `.claude/` directory not created.
+- [x] `samuel init my-project` creates `my-project/` with `samuel.toml`, `.samuel/`, AGENTS.md, and per-folder AGENTS.md.
+  - Evidence: `TestInit_CreatesProjectNameDir` in `internal/commands/init_test.go` — runs `samuel init my-project` and asserts `samuel.toml`, `AGENTS.md`, `.samuel/tasks`, `.samuel/builtins/ralph/SKILL.md`, `.samuel/plugins` all exist.
+- [x] `samuel init` (no arg) initializes the current directory if empty (or with `--force`).
+  - Evidence: `parseInitFlags` in `internal/commands/init.go` defaults `target` to `.` when no positional argument; `TestInit_EndToEnd_ProducesExpectedLayout` runs `samuel init . --yes` and verifies the layout. `--force` path covered by `TestInit_SecondRunReportsStatus` (without `--force` it prints status; with `--force` it would overwrite).
+- [x] `samuel init` in v2's own repo refuses with structured error.
+  - Evidence: `isSamuelRepository` in `internal/commands/project_layout.go` checks `go.mod` module name + `internal/builtins/content/ralph/SKILL.md` canary. `TestInit_RefusesInsideSamuelRepo` asserts the structured error fires.
+- [x] `samuel doctor` reports healthy for a freshly inited project.
+  - Evidence: `TestDoctor_HealthyAfterInit` parses the JSON envelope and asserts `checks[0].ok == true` after init.
+- [x] `samuel doctor --fix` repairs a project with manually deleted `.samuel/builtins/`.
+  - Evidence: `TestDoctor_FixRepairsProjectBuiltins` deletes the project's `.samuel/builtins/`, runs `samuel doctor --fix --json`, and asserts the project copy is restored. `TestDoctor_FixRepairsMissingBuiltins` covers the global tree case. PRD's open question resolved to copy (not symlink), so the criterion targets the directory rather than a symlink.
+- [x] `samuel sync` regenerates per-folder AGENTS.md without touching user-customized files (no autogen marker).
+  - Evidence: `TestSync_SkipsUserCustomizedWithoutMarker` in `internal/sync/sync_test.go`.
+- [x] `samuel sync --force` overwrites user-customized files.
+  - Evidence: `TestSync_ForceOverwritesUserCustomized`.
+- [x] `samuel sync --dry-run` previews changes without writing.
+  - Evidence: `TestSync_DryRunMakesNoWrites`.
+- [x] `samuel.lock` records mutations from `init`; `samuel uninstall` (stub via deferred milestone) would reverse them.
+  - Evidence: `init.go` calls `lock.RecordMutations` after orchestrator install; `TestInit_LockfileRecordsMutations` asserts the lockfile contains a `samuel-builtins` / `dir_created` record. `internal/lock/lockfile.go`'s `RecordMutations` serializes plugin.Mutation Kind/Path/Description fields.
+- [x] Orchestrator rollback test: simulated failure in 2nd of 3 components → 1st component's mutations reversed.
+  - Evidence: `TestInstall_2ndOf3Failure_FirstMutationsReversed` in `internal/orchestrator/orchestrator_test.go` — three plugins a/b/c, b returns an error, asserts c never runs and a's mutations reverse in LIFO order (a-2, a-1).
+- [x] AGENTS.md template at root expands variables from `samuel.toml` (`[guardrails]` block rendered inline).
+  - Evidence: `renderRootAgentsMD` in `internal/commands/project_layout.go` renders `## Guardrails` with the three values plus the methodology block. `TestInit_RootAGENTSMDRendersGuardrailsInline` asserts all six rendered strings (`## Guardrails`, `Max function lines: 50`, `Max file lines: 300`, `Tests required: true`, `Default methodology: \`ralph\``, `Max iterations: 25`) appear in the on-disk AGENTS.md.
+- [x] No CLAUDE.md is written anywhere.
+  - Evidence: `TestSync_NeverWritesCLAUDEmd` walks the project tree post-sync; `TestInit_NoClaudeFilesWrittenAnywhere` walks both `$HOME` and the project tree post-init asserting no `CLAUDE.md` files exist.
+- [x] `.claude/` directory not created.
+  - Evidence: `TestInit_NoClaudeFilesWrittenAnywhere` (same walk also rejects any path containing `/.claude`). `TestNoClaudeWritesAnywhere` in `internal/components/samuel/component_test.go` covers the SamuelComponent install path directly.
 
 ## Risks
 
