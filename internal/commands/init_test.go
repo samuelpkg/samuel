@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/samuelpkg/samuel/internal/config"
+	"github.com/samuelpkg/samuel/internal/lock"
 	"github.com/samuelpkg/samuel/internal/ui"
 )
 
@@ -353,6 +354,195 @@ func TestDoctor_StubVerifierAdvisorySurfaced(t *testing.T) {
 	}
 	if !found {
 		t.Errorf("expected an advisory mentioning 'stubbed'; got %+v", advisories)
+	}
+}
+
+// installFixturePlugin wires up the on-disk shape of an installed
+// plugin (lockfile entry + .samuel/plugins/<name>/ with manifest +
+// SKILL.md) without going through the install service. Used by the
+// doctor plugin-health tests so each scenario can corrupt one
+// dimension at a time.
+func installFixturePlugin(t *testing.T, project, name, version string) {
+	t.Helper()
+	dir := filepath.Join(project, ".samuel", "plugins", name)
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	toml := "name = \"" + name + "\"\nversion = \"" + version + "\"\nkind = \"skill\"\n"
+	if err := os.WriteFile(filepath.Join(dir, "samuel-plugin.toml"), []byte(toml), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	skill := "---\nname: " + name + "\ndescription: fixture\n---\nbody"
+	if err := os.WriteFile(filepath.Join(dir, "SKILL.md"), []byte(skill), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	lf, _ := config.LoadLock(project)
+	if lf == nil {
+		lf = &config.Lockfile{Version: "1"}
+	}
+	lf.Plugins = append(lf.Plugins, config.LockedPlugin{
+		Name:    name,
+		Version: version,
+		Kind:    "skill",
+		Source:  "github.com/samuelpkg/samuel-" + name,
+	})
+	if err := lock.WriteLockfile(project, lf); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// runDoctorAndParse executes `samuel doctor --json` and returns the
+// parsed envelope so tests can inspect the checks array directly.
+func runDoctorAndParse(t *testing.T) map[string]any {
+	t.Helper()
+	out, _ := captureOutput(t)
+	cmd := rootCmd
+	cmd.SetArgs([]string{"doctor", "--json"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("doctor: %v", err)
+	}
+	var env struct {
+		Data map[string]any `json:"data"`
+	}
+	if err := json.Unmarshal(out.Bytes(), &env); err != nil {
+		t.Fatalf("doctor json parse: %v\nout: %s", err, out.String())
+	}
+	return env.Data
+}
+
+func findPluginCheck(checks []any, component string) (map[string]any, bool) {
+	for _, c := range checks {
+		m, _ := c.(map[string]any)
+		if s, _ := m["component"].(string); s == component {
+			return m, true
+		}
+	}
+	return nil, false
+}
+
+func TestDoctor_PluginHealth_HappyPath(t *testing.T) {
+	_, project := withHomeAndProject(t)
+	captureOutput(t)
+	ResetFlagsForTest()
+	rootCmd.SetArgs([]string{"init", ".", "--yes", "--minimal"})
+	if err := rootCmd.Execute(); err != nil {
+		t.Fatalf("init: %v", err)
+	}
+	installFixturePlugin(t, project, "foo", "1.0.0")
+
+	data := runDoctorAndParse(t)
+	checks, _ := data["checks"].([]any)
+	c, ok := findPluginCheck(checks, "plugin:foo")
+	if !ok {
+		t.Fatalf("expected plugin:foo check; got %+v", checks)
+	}
+	if okv, _ := c["ok"].(bool); !okv {
+		t.Errorf("expected plugin:foo healthy; got %+v", c)
+	}
+}
+
+func TestDoctor_PluginHealth_MissingDir(t *testing.T) {
+	_, project := withHomeAndProject(t)
+	captureOutput(t)
+	ResetFlagsForTest()
+	rootCmd.SetArgs([]string{"init", ".", "--yes", "--minimal"})
+	if err := rootCmd.Execute(); err != nil {
+		t.Fatalf("init: %v", err)
+	}
+	installFixturePlugin(t, project, "foo", "1.0.0")
+	// Nuke the plugin directory after writing the lockfile entry.
+	if err := os.RemoveAll(filepath.Join(project, ".samuel", "plugins", "foo")); err != nil {
+		t.Fatal(err)
+	}
+
+	data := runDoctorAndParse(t)
+	checks, _ := data["checks"].([]any)
+	c, ok := findPluginCheck(checks, "plugin:foo")
+	if !ok {
+		t.Fatalf("expected plugin:foo check; got %+v", checks)
+	}
+	if okv, _ := c["ok"].(bool); okv {
+		t.Errorf("expected plugin:foo unhealthy when dir missing; got %+v", c)
+	}
+	if msg, _ := c["message"].(string); !strings.Contains(msg, "installed dir missing") {
+		t.Errorf("expected 'installed dir missing' message; got %q", msg)
+	}
+}
+
+func TestDoctor_PluginHealth_ManifestDrift(t *testing.T) {
+	_, project := withHomeAndProject(t)
+	captureOutput(t)
+	ResetFlagsForTest()
+	rootCmd.SetArgs([]string{"init", ".", "--yes", "--minimal"})
+	if err := rootCmd.Execute(); err != nil {
+		t.Fatalf("init: %v", err)
+	}
+	installFixturePlugin(t, project, "foo", "1.0.0")
+	// Tamper: rewrite the manifest with a different version.
+	toml := "name = \"foo\"\nversion = \"9.9.9\"\nkind = \"skill\"\n"
+	if err := os.WriteFile(filepath.Join(project, ".samuel", "plugins", "foo", "samuel-plugin.toml"), []byte(toml), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	data := runDoctorAndParse(t)
+	checks, _ := data["checks"].([]any)
+	c, ok := findPluginCheck(checks, "plugin:foo")
+	if !ok {
+		t.Fatalf("expected plugin:foo check; got %+v", checks)
+	}
+	if okv, _ := c["ok"].(bool); okv {
+		t.Errorf("expected plugin:foo unhealthy on version drift; got %+v", c)
+	}
+	if msg, _ := c["message"].(string); !strings.Contains(msg, "manifest drift") {
+		t.Errorf("expected 'manifest drift' message; got %q", msg)
+	}
+}
+
+func TestDoctor_PluginHealth_MissingSkillFile(t *testing.T) {
+	_, project := withHomeAndProject(t)
+	captureOutput(t)
+	ResetFlagsForTest()
+	rootCmd.SetArgs([]string{"init", ".", "--yes", "--minimal"})
+	if err := rootCmd.Execute(); err != nil {
+		t.Fatalf("init: %v", err)
+	}
+	installFixturePlugin(t, project, "foo", "1.0.0")
+	if err := os.Remove(filepath.Join(project, ".samuel", "plugins", "foo", "SKILL.md")); err != nil {
+		t.Fatal(err)
+	}
+
+	data := runDoctorAndParse(t)
+	checks, _ := data["checks"].([]any)
+	c, ok := findPluginCheck(checks, "plugin:foo")
+	if !ok {
+		t.Fatalf("expected plugin:foo check; got %+v", checks)
+	}
+	if okv, _ := c["ok"].(bool); okv {
+		t.Errorf("expected plugin:foo unhealthy when SKILL.md missing; got %+v", c)
+	}
+	if msg, _ := c["message"].(string); !strings.Contains(msg, "SKILL.md missing") {
+		t.Errorf("expected 'SKILL.md missing' message; got %q", msg)
+	}
+}
+
+func TestDoctor_PluginHealth_NoLockfileNoChecks(t *testing.T) {
+	// Project initialized but no plugins installed: doctor should not
+	// surface any plugin: checks (silent is correct here).
+	_, _ = withHomeAndProject(t)
+	captureOutput(t)
+	ResetFlagsForTest()
+	rootCmd.SetArgs([]string{"init", ".", "--yes", "--minimal"})
+	if err := rootCmd.Execute(); err != nil {
+		t.Fatalf("init: %v", err)
+	}
+
+	data := runDoctorAndParse(t)
+	checks, _ := data["checks"].([]any)
+	for _, c := range checks {
+		m, _ := c.(map[string]any)
+		if s, _ := m["component"].(string); strings.HasPrefix(s, "plugin:") {
+			t.Errorf("expected no plugin: checks with no installs; got %+v", m)
+		}
 	}
 }
 

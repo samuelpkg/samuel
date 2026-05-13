@@ -7,6 +7,38 @@ this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v2.0.0-rc.11] — Doctor now verifies installed plugins
+
+Closes [Issue #3](https://github.com/samuelpkg/samuel/issues/3).
+
+### Added
+
+- **`samuel doctor` now walks every installed plugin in `samuel.lock`
+  and verifies the on-disk artifact.** Pre-rc.11 the command advertised
+  "framework + plugin health" but only checked framework health.
+  Each lockfile entry now produces a `plugin:<name>` check that
+  validates, in order:
+  1. `.samuel/plugins/<name>/` exists on disk
+  2. `samuel-plugin.toml` parses
+  3. manifest name / version / kind match the lockfile entry
+  4. per-kind required artifact is present:
+     - skill → `SKILL.md`
+     - wasm → manifest `wasm.module` (default `plugin.wasm`)
+     - oci → manifest `oci.image` is non-empty
+
+  Healthy plugins render as `✓ plugin:foo — 1.0.0 (skill) — manifest +
+  artifact intact`. Drifted plugins render as `✗ plugin:foo — <reason>`
+  with a `fix: samuel install foo --force` hint. Failures are
+  countable: the summary line now reads `… N failed, N fixable, …`.
+
+  JSON envelope: each plugin's check joins the existing `data.checks`
+  array, so consumers don't need a schema change.
+
+  Digest verification is intentionally out of scope for this rc —
+  installs don't yet write `LockedPlugin.Digest`, so there's nothing
+  to compare against. That's a separate follow-on once installs start
+  recording the digest.
+
 ## [v2.0.0-rc.10] — Surface that signature verification is stubbed in v2.0
 
 Closes [Issue #6](https://github.com/samuelpkg/samuel/issues/6).

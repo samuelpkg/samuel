@@ -8,8 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/samuelpkg/samuel/internal/config"
 	"github.com/samuelpkg/samuel/internal/errors"
 	"github.com/samuelpkg/samuel/internal/plugin"
+	"github.com/samuelpkg/samuel/internal/plugin/manifest"
 	"github.com/samuelpkg/samuel/internal/plugin/verify"
 	"github.com/samuelpkg/samuel/internal/ui"
 )
@@ -63,6 +65,12 @@ func runDoctor(cmd *cobra.Command, _ []string) error {
 	if pc, ok := checkProjectLayout(); ok {
 		checks = append(checks, pc)
 	}
+
+	// Plugin-level state: for every entry in samuel.lock, confirm the
+	// directory + manifest + per-kind required files are intact. Issue
+	// #3 — doctor advertised "framework + plugin health" but only
+	// checked framework health pre-rc.11.
+	checks = append(checks, checkInstalledPlugins()...)
 
 	// Detect coding-assistant binaries to suggest translator plugins
 	// per RFD 0002 §1. Informational only — no health gate.
@@ -206,6 +214,133 @@ func checkProjectLayout() (checkResult, bool) {
 		OK:        true,
 		Message:   ".samuel/ layout intact",
 	}, true
+}
+
+// checkInstalledPlugins verifies every plugin recorded in samuel.lock
+// against its on-disk artifact. Returns one checkResult per installed
+// plugin (component = "plugin:<name>"). Returns nil when cwd is not an
+// initialized project, when no lockfile exists, or when the lockfile
+// declares no plugins — none of those are health failures.
+//
+// Per-plugin checks (any failure marks the plugin unhealthy with the
+// first reason encountered, so the user sees the most actionable
+// hint):
+//   1. .samuel/plugins/<name>/ exists on disk.
+//   2. samuel-plugin.toml parses.
+//   3. manifest.Name / Version / Kind agree with the lockfile entry.
+//   4. Per-kind required artifact is present:
+//        skill -> SKILL.md
+//        wasm  -> manifest.Wasm.Module (or "plugin.wasm" default)
+//        oci   -> manifest.OCI.Image must be non-empty (image itself
+//                 lives in the registry, not on disk).
+func checkInstalledPlugins() []checkResult {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return nil
+	}
+	lf, err := config.LoadLock(cwd)
+	if err != nil {
+		return nil
+	}
+	if len(lf.Plugins) == 0 {
+		return nil
+	}
+	out := make([]checkResult, 0, len(lf.Plugins))
+	for _, lp := range lf.Plugins {
+		out = append(out, checkOnePlugin(cwd, lp))
+	}
+	return out
+}
+
+func checkOnePlugin(projectDir string, lp config.LockedPlugin) checkResult {
+	component := "plugin:" + lp.Name
+	pluginDir := filepath.Join(projectDir, ".samuel", "plugins", lp.Name)
+
+	if info, err := os.Stat(pluginDir); err != nil || !info.IsDir() {
+		return checkResult{
+			Component: component,
+			OK:        false,
+			Message:   "installed dir missing — samuel.lock claims it, but " + pluginDir + " is gone",
+			FixHint:   "samuel install " + lp.Name + " --force",
+		}
+	}
+
+	m, err := manifest.LoadFromDir(pluginDir)
+	if err != nil {
+		return checkResult{
+			Component: component,
+			OK:        false,
+			Message:   "samuel-plugin.toml missing or invalid: " + err.Error(),
+			FixHint:   "samuel install " + lp.Name + " --force",
+		}
+	}
+
+	if m.Name != lp.Name {
+		return checkResult{
+			Component: component,
+			OK:        false,
+			Message:   "manifest drift: lockfile says " + lp.Name + " but manifest says " + m.Name,
+			FixHint:   "samuel install " + lp.Name + " --force",
+		}
+	}
+	if m.Version != lp.Version {
+		return checkResult{
+			Component: component,
+			OK:        false,
+			Message:   "manifest drift: lockfile @" + lp.Version + " but manifest @" + m.Version,
+			FixHint:   "samuel install " + lp.Name + " --force",
+		}
+	}
+	if string(m.Kind) != lp.Kind {
+		return checkResult{
+			Component: component,
+			OK:        false,
+			Message:   "manifest drift: lockfile kind=" + lp.Kind + " but manifest kind=" + string(m.Kind),
+			FixHint:   "samuel install " + lp.Name + " --force",
+		}
+	}
+
+	switch m.Kind {
+	case manifest.KindSkill:
+		skillPath := filepath.Join(pluginDir, "SKILL.md")
+		if _, err := os.Stat(skillPath); err != nil {
+			return checkResult{
+				Component: component,
+				OK:        false,
+				Message:   "SKILL.md missing from " + pluginDir,
+				FixHint:   "samuel install " + lp.Name + " --force",
+			}
+		}
+	case manifest.KindWasm:
+		modName := "plugin.wasm"
+		if m.Wasm != nil && m.Wasm.Module != "" {
+			modName = m.Wasm.Module
+		}
+		modPath := filepath.Join(pluginDir, modName)
+		if _, err := os.Stat(modPath); err != nil {
+			return checkResult{
+				Component: component,
+				OK:        false,
+				Message:   "wasm module missing: " + modName,
+				FixHint:   "samuel install " + lp.Name + " --force",
+			}
+		}
+	case manifest.KindOci:
+		if m.OCI == nil || m.OCI.Image == "" {
+			return checkResult{
+				Component: component,
+				OK:        false,
+				Message:   "manifest declares oci kind but no image reference",
+				FixHint:   "samuel install " + lp.Name + " --force",
+			}
+		}
+	}
+
+	return checkResult{
+		Component: component,
+		OK:        true,
+		Message:   lp.Version + " (" + lp.Kind + ") — manifest + artifact intact",
+	}
 }
 
 // orchestratorIface is the minimal surface doctor needs from the
