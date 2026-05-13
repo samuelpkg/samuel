@@ -7,8 +7,8 @@
 
 - `samuel_v1/.claude/skills/` — 79 source SKILL.md directories
 - `samuel_v1/internal/skills/content/` — byte-identical mirror; same source
-- `.wiki/sources/2026-05-12-v1-skill-content-survey.md` — full triage
-- `.wiki/synthesis/v2-skill-migration-plan.md` — migration approach
+- `wiki/sources/2026-05-12-v1-skill-content-survey.md` — full triage
+- `wiki/synthesis/v2-skill-migration-plan.md` — migration approach
 - RFD 0007 (Committed) — design contract
 - `scripts/migrate-v1-skills/main.go` — migration tool source (commit: d9a7e4c+ this milestone)
 - 5 auxiliary repos that shipped with this milestone (now live at `github.com/samuelpkg/*`): `samuel-plugin-release`, `samuel-registry`, `samuel-starter`, `samuel-claude-translator`, `samuel-codex-translator`

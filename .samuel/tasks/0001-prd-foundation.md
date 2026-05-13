@@ -114,7 +114,7 @@ Bottom-up build order:
 1. **Go module + Makefile** — skeleton compiles, `make build` produces a binary.
 2. **Errors package** — port from `samuel_v1/internal/orchestrator/errors.go`.
 3. **Lock package** — port from `samuel_v1/internal/orchestrator/lock_unix.go` + `lock_other.go`.
-4. **TOON encoder/decoder** — audit existing Go libraries; write our own if none maintained. Spec at `.wiki/concepts/toon-evaluation.md`.
+4. **TOON encoder/decoder** — audit existing Go libraries; write our own if none maintained. Spec at `wiki/concepts/toon-evaluation.md`.
 5. **Config package** — TOML schema + read/write.
 6. **CLI root + version command** — Cobra setup, JSON envelope (`schemaVersion: 4`), `--json` flag.
 7. **Charm UI base** — lipgloss tokens, JSON helpers.

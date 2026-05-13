@@ -9,9 +9,9 @@
 - `samuel_v1/internal/orchestrator/{lock_unix,lock_other}.go` — source for port
 - `samuel_v1/internal/skills/embed.go` — pattern reference
 - `samuel_v1/Makefile`, `.goreleaser.yaml`, `install.sh`, `.github/workflows/*` — source for port
-- `.wiki/concepts/toon-evaluation.md` — TOON encoder spec
-- `.wiki/concepts/structured-errors.md` — error UX pattern
-- `.wiki/entities/config-format.md` — TOML schema
+- `wiki/concepts/toon-evaluation.md` — TOON encoder spec
+- `wiki/concepts/structured-errors.md` — error UX pattern
+- `wiki/entities/config-format.md` — TOML schema
 
 ## Tasks
 

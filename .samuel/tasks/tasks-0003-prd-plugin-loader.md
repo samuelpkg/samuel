@@ -7,7 +7,7 @@
 
 - `samuel_v1/internal/core/{downloader,extractor,docker}.go` — partial sources for port
 - `samuel_v1/internal/github/client.go` — HTTP wrapper to extend
-- `.wiki/concepts/plugin-format.md`, `.wiki/concepts/versioning-compatibility.md` — design references
+- `wiki/concepts/plugin-format.md`, `wiki/concepts/versioning-compatibility.md` — design references
 - RFD 0001, 0003 (Committed) — design contract
 
 ## Tasks

@@ -14,6 +14,11 @@ edit_uri: edit/main/docs/
 # Copyright
 copyright: Copyright &copy; 2025-2026 samuelpkg contributors
 
+# Files/directories under docs/ that should not be built or shipped.
+# Gitignore-style patterns; leading "/" anchors to the docs root.
+exclude_docs: |
+  /wiki/                      # internal design exploration, not user-facing
+
 # Theme configuration
 theme:
   name: material

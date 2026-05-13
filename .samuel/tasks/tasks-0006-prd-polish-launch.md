@@ -7,7 +7,7 @@
 ## Relevant files
 
 - All 8 RFDs (already written and Committed)
-- `.wiki/synthesis/v2-template-and-docs.md` — docs restructure plan
+- `wiki/synthesis/v2-template-and-docs.md` — docs restructure plan
 - `samuel_v1/mkdocs.yml`, `samuel_v1/docs/` — source for port
 - `samuel_v1/CHANGELOG.md` v3.0.0 entry — quality bar to match
 - `mkdocs.yml` (new) + `docs/` (29 new pages)

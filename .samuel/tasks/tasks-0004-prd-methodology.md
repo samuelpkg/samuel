@@ -8,7 +8,7 @@
 - `samuel_v1/internal/core/auto*.go` (11 files) — primary source for port
 - `samuel_v1/internal/core/docker.go` — multi-agent sandbox pattern to generalize
 - `samuel_v1/internal/commands/auto*.go` — CLI surface to port
-- `.wiki/synthesis/auto-mode-v2-design.md`, `.wiki/concepts/methodology-default-plus-plugin.md`, `.wiki/concepts/pre-computed-context.md`, `.wiki/concepts/pilot-mode.md`, `.wiki/concepts/prompt-template-variables.md` — design references
+- `wiki/synthesis/auto-mode-v2-design.md`, `wiki/concepts/methodology-default-plus-plugin.md`, `wiki/concepts/pre-computed-context.md`, `wiki/concepts/pilot-mode.md`, `wiki/concepts/prompt-template-variables.md` — design references
 - RFD 0004, 0006 (Committed) — design contract
 
 ## Tasks

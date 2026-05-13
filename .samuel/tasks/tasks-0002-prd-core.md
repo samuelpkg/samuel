@@ -7,9 +7,9 @@
 
 - `samuel_v1/internal/orchestrator/{orchestrator,component,component_samuel}.go` — source for port
 - `samuel_v1/internal/core/sync.go` — source for sync port
-- `.wiki/entities/orchestrator.md`, `.wiki/entities/component-samuel.md` — design references
-- `.wiki/concepts/component-lifecycle.md` — pattern doc
-- `.wiki/concepts/agents-md-primary.md` — AGENTS.md-only stance
+- `wiki/entities/orchestrator.md`, `wiki/entities/component-samuel.md` — design references
+- `wiki/concepts/component-lifecycle.md` — pattern doc
+- `wiki/concepts/agents-md-primary.md` — AGENTS.md-only stance
 
 ## Tasks
 
