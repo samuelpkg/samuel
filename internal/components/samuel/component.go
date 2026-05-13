@@ -3,15 +3,13 @@
 // skills (ralph, create-skill, sync, generate-agents-md) from an
 // embed.FS into ~/.samuel/builtins/.
 //
-// Differences from v1's SamuelComponent (samuel_v1/internal/orchestrator/
-// component_samuel.go):
+// Differences from v1's SamuelComponent:
 //
-//   - Target moved from ~/.claude/skills/samuel/ to ~/.samuel/builtins/
-//     per RFD 0009 (.claude-agnostic framework).
-//   - No project-level symlink: v1 created
-//     <project>/.claude/skills/samuel -> ~/.claude/skills/samuel; v2's
-//     .samuel/builtins is populated by the init command writing a
-//     local copy (per the PRD's "Recommend copy" decision).
+//   - Target moved to ~/.samuel/builtins/ per RFD 0009 (the framework
+//     is agent-agnostic; no writes to legacy assistant home paths).
+//   - No project-level symlink: v2's .samuel/builtins is populated by
+//     the init command writing a local copy (per the PRD's "Recommend
+//     copy" decision in §10).
 //   - Returns plugin.Mutation values (with kinds renamed to the v2
 //     enum) instead of v1's orchestrator.Mutation.
 //
@@ -39,8 +37,8 @@ import (
 const Name = "samuel-builtins"
 
 // globalDir is the directory under $HOME that hosts the framework's
-// built-in skill tree. v2 lives under .samuel/ exclusively — no
-// ~/.claude/ writes (RFD 0009).
+// built-in skill tree. v2 lives under .samuel/ exclusively — no writes
+// land in legacy assistant home paths (RFD 0009).
 const globalDir = ".samuel/builtins"
 
 // Component is the concrete plugin.Plugin that syncs Samuel's embedded

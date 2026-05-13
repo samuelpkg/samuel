@@ -3,10 +3,10 @@
 // live there. Ported from samuel_v1/internal/core/sync.go with two
 // invariants tightened:
 //
-//  1. AGENTS.md only. v1 emitted CLAUDE.md alongside AGENTS.md; v2 is
-//     ".claude-agnostic" (RFD 0009) — the framework writes the
-//     vendor-neutral AGENTS.md exclusively. Tool-specific files come
-//     from translator plugins, not the core.
+//  1. AGENTS.md only. v1 emitted tool-specific context files alongside
+//     AGENTS.md; v2 is agent-agnostic (RFD 0009) — the framework writes
+//     the vendor-neutral AGENTS.md exclusively. Tool-specific files
+//     come from translator plugins, not the core.
 //
 //  2. Defaults are embedded; users override via samuel.toml [sync.*].
 //     The defaults still ship in this package so the framework is
@@ -144,7 +144,8 @@ func SyncFolderContext(opts Options) (*Result, error) {
 }
 
 // WriteFolderContext writes AGENTS.md (only) to dir. It enforces the
-// AGENTS.md-only invariant — no CLAUDE.md is emitted.
+// AGENTS.md-only invariant — no tool-specific context files are
+// emitted.
 //
 // Behavior matrix:
 //

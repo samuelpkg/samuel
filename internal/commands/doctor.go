@@ -67,8 +67,9 @@ func runDoctor(cmd *cobra.Command, _ []string) error {
 	// per RFD 0002 §1. Informational only — no health gate.
 	suggestions := suggestTranslators()
 
-	// v1-leftover detection: ~/.claude/skills/ presence is purely
-	// informational (Samuel v2 does not manage it).
+	// v1-leftover detection: the v1 user-scoped skill tree is purely
+	// informational (Samuel v2 does not manage it). The path itself
+	// lives in detectV1Leftovers so this comment can stay neutral.
 	unmanaged := detectV1Leftovers()
 
 	if fix {
@@ -256,12 +257,17 @@ func renderDoctorHuman(checks []checkResult, suggestions []string, unmanaged []s
 
 // suggestTranslators looks for known coding-assistant binaries on PATH
 // and suggests installing the matching translator plugin per RFD 0002 §1.
-// The plugins themselves arrive in Milestone 5; doctor just hints.
+// The plugins themselves arrive in Milestone 5; doctor just hints. The
+// per-tool labels live next to the binary name so future translator
+// plugins can replace this map with manifest-driven discovery.
 func suggestTranslators() []string {
+	// agnostic-allow: PRD 0002 §7.7 — translator suggestion is the one
+	// place doctor names tool-specific products. The hint shifts the
+	// tool-coupling to a plugin the user installs, not the framework.
 	candidates := map[string]string{
-		"claude": "claude-translator (Anthropic Claude Code)",
-		"codex":  "codex-translator (OpenAI Codex CLI)",
-		"cursor": "cursor-translator (Cursor)",
+		"claude": "claude-translator (Anthropic Claude Code)", // agnostic-allow: PRD 0002 §7.7
+		"codex":  "codex-translator (OpenAI Codex CLI)",       // agnostic-allow: PRD 0002 §7.7
+		"cursor": "cursor-translator (Cursor)",                // agnostic-allow: PRD 0002 §7.7
 	}
 	var out []string
 	for bin, label := range candidates {
@@ -272,15 +278,16 @@ func suggestTranslators() []string {
 	return out
 }
 
-// detectV1Leftovers reports whether ~/.claude/skills/ exists from a
-// prior v1 install. Samuel v2 does not manage it — the hint is
-// informational so users know to remove it manually if desired.
+// detectV1Leftovers reports whether the v1 user-scoped skills tree
+// exists from a prior install. v2 does not manage it; the hint is
+// informational so users know to remove it manually if desired (PRD
+// 0002 §7.6 migration helper).
 func detectV1Leftovers() []string {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return nil
 	}
-	p := filepath.Join(home, ".claude", "skills")
+	p := filepath.Join(home, ".claude", "skills") // agnostic-allow: PRD 0002 §7.6 v1 leftover detection
 	if info, err := os.Stat(p); err == nil && info.IsDir() {
 		entries, _ := os.ReadDir(p)
 		if len(entries) > 0 {

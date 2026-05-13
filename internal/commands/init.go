@@ -171,9 +171,11 @@ func runInit(cmd *cobra.Command, args []string) error {
 		return renderStructuredError(err)
 	}
 
-	// Detect v1 CLAUDE.md and warn (don't modify).
-	if _, err := os.Stat(filepath.Join(flags.absTargetDir, "CLAUDE.md")); err == nil {
-		ui.Warn("Found existing CLAUDE.md from v1; leaving it untouched (Samuel v2 writes AGENTS.md only)")
+	// PRD 0002 §6.12 requires a one-time migration warning when a v1
+	// artifact is present. The framework otherwise stays agent-agnostic;
+	// this stat is read-only and never mutates the file.
+	if _, err := os.Stat(filepath.Join(flags.absTargetDir, "CLAUDE.md")); err == nil { // agnostic-allow: PRD 0002 §6.12 migration hint
+		ui.Warn("Found existing v1 context file at the project root; leaving it untouched (Samuel v2 writes AGENTS.md only)") // agnostic-allow: PRD 0002 §6.12 migration hint
 	}
 
 	if !displayAndConfirm(flags) {

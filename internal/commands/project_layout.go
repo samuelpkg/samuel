@@ -160,7 +160,8 @@ customize a built-in, fork it as a regular skill under ` + "`.samuel/plugins/`" 
 
 // renderRootAgentsMD renders the project-level AGENTS.md from cfg. The
 // template stays under 150 lines after expansion (CI checks the rendered
-// output, not the source). v2 emits AGENTS.md ONLY — never CLAUDE.md.
+// output, not the source). v2 emits AGENTS.md ONLY — tool-specific
+// context files are the job of translator plugins, not the core.
 func renderRootAgentsMD(projectName string, cfg *config.Config) string {
 	if projectName == "" {
 		projectName = "project"

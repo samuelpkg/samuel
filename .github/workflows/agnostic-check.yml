@@ -34,8 +34,18 @@ jobs:
           # Patterns matched as whole words / paths. The template and
           # this workflow file are the only places allowed to mention
           # AGENTS.md (which is itself agent-agnostic).
+          #
+          # Exceptions:
+          #   - *_test.go — tests assert the framework does NOT couple to
+          #     tool-specific outputs; mentioning those names there is
+          #     anti-coupling, not coupling.
+          #   - any line tagged "agnostic-allow" — explicit opt-out for
+          #     PRD-mandated migration helpers (e.g. v1 leftover hint).
           PATTERNS='CLAUDE\.md|\.claude/|\.cursor/|\.codex/|Cursor|Codex CLI'
-          HITS=$(grep -RInE "$PATTERNS" internal/ cmd/ 2>/dev/null || true)
+          HITS=$(grep -RInE "$PATTERNS" internal/ cmd/ 2>/dev/null \
+            | grep -v -E '_test\.go:' \
+            | grep -v 'agnostic-allow' \
+            || true)
           if [ -n "$HITS" ]; then
             echo "::error::Tool-specific references found in internal/ or cmd/. Move to a translator plugin."
             echo "$HITS"

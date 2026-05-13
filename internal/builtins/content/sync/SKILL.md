@@ -3,8 +3,9 @@ name: sync
 description: |
   Per-folder AGENTS.md generator. Walks the project tree, analyzes each
   directory's languages and key files, and writes AGENTS.md (only) into
-  every folder that lacks a user-customized one. Drop-in replacement for
-  v1's CLAUDE.md sync — CLAUDE.md is no longer emitted.
+  every folder that lacks a user-customized one. Drop-in replacement
+  for v1's per-folder context sync; tool-specific context files now
+  belong to translator plugins instead of the core framework.
   Use when the user asks to "sync the project", "regenerate AGENTS.md",
   or "refresh the per-folder context".
 license: MIT
@@ -20,7 +21,8 @@ metadata:
 `samuel sync` walks the project tree and writes per-folder AGENTS.md
 files describing each directory's purpose, primary languages, key
 files, and whether tests live there. The framework writes AGENTS.md
-ONLY — never CLAUDE.md (v2 invariant per RFD 0009).
+exclusively — vendor-specific context files are produced by translator
+plugins, not the core (v2 invariant per RFD 0009).
 
 ## Behavior
 
