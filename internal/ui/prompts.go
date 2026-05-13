@@ -6,14 +6,14 @@ import (
 	"os"
 
 	"github.com/charmbracelet/huh"
-	"golang.org/x/term"
+	"github.com/mattn/go-isatty"
 )
 
 // IsTerminal reports whether stdin is attached to an interactive
 // terminal. Prompts fall back to a non-interactive scan path when
 // false (e.g. CI, piped input).
 func IsTerminal() bool {
-	return term.IsTerminal(int(os.Stdin.Fd()))
+	return isatty.IsTerminal(os.Stdin.Fd())
 }
 
 // Confirm runs a yes/no prompt with a default. When stdin is not a
