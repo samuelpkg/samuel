@@ -99,6 +99,24 @@ type ClaudeTranslator struct {
 	Enabled bool `toml:"enabled"`
 }
 
+// ClaudeTranslatorEnabled reports whether the built-in AGENTS.md →
+// CLAUDE.md mirror should run for this project.
+//
+// The translator is a built-in default-on feature, so absent
+// configuration MUST be treated as enabled. The [translators.claude]
+// section exists for explicit opt-out (enabled = false), not opt-in.
+// Without this rule, every project initialized before the translator
+// landed would silently stop receiving mirror updates after an upgrade.
+func (c *Config) ClaudeTranslatorEnabled() bool {
+	if c == nil {
+		return false
+	}
+	if c.Translators == nil || c.Translators.Claude == nil {
+		return true
+	}
+	return c.Translators.Claude.Enabled
+}
+
 // Defaults returns the zero-value-with-sensible-defaults Config used
 // when a project has no samuel.toml yet (e.g. before `samuel init`).
 func Defaults() *Config {

@@ -7,6 +7,19 @@ this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v2.0.0-rc.5] — Translator default-on fix
+
+### Fixed
+
+- **Built-in Claude translator now runs by default on existing
+  projects.** rc.4 required the `[translators.claude]` section to be
+  present in `samuel.toml` for the mirror to fire, so every project
+  initialized before rc.4 silently stopped getting CLAUDE.md updates
+  after upgrading. The new `Config.ClaudeTranslatorEnabled()` helper
+  treats absent configuration as enabled (the section is for explicit
+  opt-out only). Both `samuel init` and `samuel sync` go through the
+  helper.
+
 ## [v2.0.0-rc.4] — Claude translator carve-out
 
 Built-in AGENTS.md → CLAUDE.md mirror lands in core. Agent-agnostic

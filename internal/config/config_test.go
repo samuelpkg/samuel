@@ -147,4 +147,27 @@ func TestDefaults_NonEmpty(t *testing.T) {
 	if c.Guardrails == nil || c.Guardrails.MaxFunctionLines == 0 {
 		t.Errorf("Defaults missing guardrails")
 	}
+	if c.Translators == nil || c.Translators.Claude == nil || !c.Translators.Claude.Enabled {
+		t.Errorf("Defaults should ship with the Claude translator enabled")
+	}
+}
+
+func TestClaudeTranslatorEnabled(t *testing.T) {
+	cases := []struct {
+		name string
+		cfg  *Config
+		want bool
+	}{
+		{"nil config", nil, false},
+		{"missing translators section (pre-rc.4 project)", &Config{}, true},
+		{"missing claude section", &Config{Translators: &Translators{}}, true},
+		{"explicit enabled=true", &Config{Translators: &Translators{Claude: &ClaudeTranslator{Enabled: true}}}, true},
+		{"explicit enabled=false (opt-out)", &Config{Translators: &Translators{Claude: &ClaudeTranslator{Enabled: false}}}, false},
+		{"defaults", Defaults(), true},
+	}
+	for _, tc := range cases {
+		if got := tc.cfg.ClaudeTranslatorEnabled(); got != tc.want {
+			t.Errorf("%s: got %v want %v", tc.name, got, tc.want)
+		}
+	}
 }

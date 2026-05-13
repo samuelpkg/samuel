@@ -98,12 +98,16 @@ func runSync(cmd *cobra.Command, _ []string) error {
 // when enabled in the project config. Returns nil when disabled or when
 // the project has no samuel.toml yet — sync's smart-bare-invocation
 // path needs to stay side-effect-free.
+//
+// Absence of [translators.claude] means default-on (see
+// Config.ClaudeTranslatorEnabled), so projects initialized before the
+// translator landed still get mirrors on the next sync.
 func runClaudeMirror(root string, maxDepth int, force, dryRun bool) *claude.Result {
 	cfg, err := config.Load(root)
 	if err != nil {
 		return nil
 	}
-	if cfg.Translators == nil || cfg.Translators.Claude == nil || !cfg.Translators.Claude.Enabled {
+	if !cfg.ClaudeTranslatorEnabled() {
 		return nil
 	}
 	res, err := claude.Mirror(claude.Options{

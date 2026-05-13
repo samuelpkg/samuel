@@ -240,11 +240,10 @@ func runInit(cmd *cobra.Command, args []string) error {
 	}
 
 	// 6. Run the built-in Claude translator so CLAUDE.md mirrors land
-	// alongside every AGENTS.md the sync step produced. The config we
-	// just wrote enables this by default; users can flip it off in
-	// samuel.toml.
+	// alongside every AGENTS.md the sync step produced. Default-on; the
+	// [translators.claude] section in samuel.toml is opt-out only.
 	var mirrorRes *claude.Result
-	if cfg.Translators != nil && cfg.Translators.Claude != nil && cfg.Translators.Claude.Enabled {
+	if cfg.ClaudeTranslatorEnabled() {
 		mirrorRes, _ = claude.Mirror(claude.Options{
 			RootDir:  flags.absTargetDir,
 			MaxDepth: -1,
