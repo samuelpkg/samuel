@@ -53,18 +53,22 @@ samuel doctor
 samuel init my-project
 cd my-project
 
-# AGENTS.md is now in the working tree — that's your canonical context.
-# Add a plugin:
+# AGENTS.md is your canonical context. CLAUDE.md was mirrored
+# automatically by the built-in Claude translator — see `samuel sync`
+# for how to keep it fresh after you edit AGENTS.md. .samuel/.gitignore
+# was also written so the transient state stays out of git.
+
+# Browse the registry and add a plugin:
+samuel search go
 samuel install go-guide
 
-# (Optional) keep CLAUDE.md generated for tools that read it:
-samuel install samuel-claude-translator
-
-# Start the autonomous loop:
-samuel run start
+# Start the autonomous loop (dry-run first to see the prompt that
+# would be sent, then drop --dry-run when you're ready):
+samuel run init --prd .samuel/tasks/0001-prd-feature.md
+samuel run start --dry-run --iterations 1 --yes
 ```
 
-The autonomous loop is iteration-capped (Ralph Wiggum methodology) and emits hooks at every boundary. Plugins attach to the hooks; the framework drives the loop. Full walkthrough in [Quick Start](https://samuelpkg.github.io/samuel/getting-started/quick-start/).
+The autonomous loop is iteration-capped (Ralph Wiggum methodology) and emits hooks at every boundary. Plugins attach to the hooks; the framework drives the loop. Full walkthrough in [Quick Start](https://samuelpkg.github.io/samuel/getting-started/quick-start/). A ready-to-run example project lives at [`examples/tetris/`](examples/tetris/) with a complete manual-test recipe in its README.
 
 ## Documentation
 
@@ -79,7 +83,7 @@ The autonomous loop is iteration-capped (Ralph Wiggum methodology) and emits hoo
 
 v2 is a clean break. The binary name is the same; installing v2 overwrites v1. The v1 source lives at the [`v1-final`](https://github.com/samuelpkg/samuel/tree/v1-final) tag.
 
-If you used `CLAUDE.md` directly, install the [Claude translator plugin](https://github.com/samuelpkg/samuel-claude-translator) — it mirrors `AGENTS.md → CLAUDE.md` on every `samuel sync`. If you used `gstack` or `gbrain`, see [RFD 0008](https://samuelpkg.github.io/samuel/rfd/0008/) for the rationale and migration path.
+If you used `CLAUDE.md` directly, you'll get `AGENTS.md → CLAUDE.md` mirroring out of the box — the built-in Claude translator handles it on every `samuel init` and `samuel sync`. (Pre-rc.4 this was a separate plugin; carve-out shipped in v2.0.0-rc.4 because Claude Code is the only major coding assistant that doesn't read AGENTS.md natively. See [AGENTS.md docs](https://samuelpkg.github.io/samuel/core/agents-md/#claude-translator) for the opt-out.) If you used `gstack` or `gbrain`, see [RFD 0008](https://samuelpkg.github.io/samuel/rfd/0008/) for the rationale and migration path.
 
 Full notice: [Migrating from v1](https://samuelpkg.github.io/samuel/getting-started/migration-v1/).
 
@@ -93,11 +97,15 @@ samuel_v2/
 │   ├── methodology/        # built-in methodologies (ralph)
 │   ├── orchestrator/       # component lifecycle + rollback
 │   ├── plugin/             # three tiers + manifest + capability + verify + registry
-│   ├── sync/               # AGENTS.md generator
+│   ├── sync/               # AGENTS.md generator (root + per-folder)
+│   ├── translator/         # built-in translators (claude — AGENTS.md → CLAUDE.md mirror)
 │   ├── ui/                 # Charm UI (lipgloss + huh + bubbles)
 │   └── ...
 ├── template/AGENTS.md.tmpl # canonical template (≤150 lines, CI-enforced)
+├── examples/tetris/        # ready-to-run sample project + manual-test recipe
+├── e2e/hermetic/           # end-to-end test suite (build tag `e2e`, ~3s)
 ├── docs/                   # mkdocs site (deployed to samuelpkg.github.io/samuel/)
+├── wiki/                   # design knowledge base (not auto-published)
 ├── scripts/                # release-checklist, docs/RFD generators, v1 deprecation
 ├── .goreleaser.yaml        # signed builds + brew tap + cosign bundle
 └── rfd-index.toml          # RFD source of truth
