@@ -134,18 +134,24 @@ release:
 
     **Full Changelog**: https://github.com/ar4mirez/samuel/compare/{{ .PreviousTag }}...{{ .Tag }}
 
-brews:
-  - name: samuel
-    repository:
-      owner: ar4mirez
-      name: homebrew-tap
-      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
-    directory: Formula
-    homepage: "https://github.com/ar4mirez/samuel"
-    description: "Rails for AI coding assistants"
-    license: "MIT"
-    install: |
-      bin.install "samuel"
-      generate_completions_from_executable(bin/"samuel", "completion")
-    test: |
-      system "#{bin}/samuel", "version"
+# Homebrew tap publication is intentionally disabled during the v2
+# alpha line. The ar4mirez/homebrew-tap currently ships the v1 (3.x)
+# `samuel` formula; pointing it at a v2 alpha would silently upgrade
+# every `brew install samuel` user to a pre-release build. Re-enable
+# this block at v2.0.0 GA — the config is preserved verbatim below.
+#
+# brews:
+#   - name: samuel
+#     repository:
+#       owner: ar4mirez
+#       name: homebrew-tap
+#       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+#     directory: Formula
+#     homepage: "https://github.com/ar4mirez/samuel"
+#     description: "Rails for AI coding assistants"
+#     license: "MIT"
+#     install: |
+#       bin.install "samuel"
+#       generate_completions_from_executable(bin/"samuel", "completion")
+#     test: |
+#       system "#{bin}/samuel", "version"

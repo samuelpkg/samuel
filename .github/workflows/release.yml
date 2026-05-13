@@ -52,4 +52,8 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # HOMEBREW_TAP_GITHUB_TOKEN is wired but unused while the
+          # brews block in .goreleaser.yaml is commented out for the
+          # v2 alpha line (avoids overwriting v1's `brew install
+          # samuel` formula). Re-enable at v2.0.0 GA.
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
