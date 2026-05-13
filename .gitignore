@@ -1,0 +1,28 @@
+# Wiki symlink — external design exploration, not part of v2 repo
+.wiki
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+coverage.out
+coverage.html
+/bin/
+
+# Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build / release
+/dist/
+/site/

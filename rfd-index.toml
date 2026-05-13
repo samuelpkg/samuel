@@ -1,0 +1,106 @@
+# RFD master index for Samuel v2
+# Source of truth for RFD metadata. Updated by create-rfd workflow or manually.
+#
+# States: Prediscussion, Ideation, Discussion, Published, Committed, Abandoned
+# Locations:
+#   Prediscussion / Ideation: .samuel/rfd/ (private)
+#   Discussion / Published / Committed / Abandoned: docs/rfd/ (public)
+
+schema_version = 1
+next_number = 9
+
+[[rfds]]
+number = "0001"
+title = "Three-tier plugin architecture (skill / WASM / OCI)"
+state = "Committed"
+authors = ["ar4mirez"]
+labels = ["v2", "plugin-format", "architecture", "wasm", "oci", "sandboxing"]
+created = "2026-05-12"
+updated = "2026-05-12"
+path = "docs/rfd/0001.md"
+discussion = ""
+related_prd = "0003-prd-plugin-loader.md"
+
+[[rfds]]
+number = "0002"
+title = "AGENTS.md primary, tool-specific files via translator plugins"
+state = "Committed"
+authors = ["ar4mirez"]
+labels = ["v2", "agents-md", "translator-plugins", "agnostic", "cross-tool"]
+created = "2026-05-12"
+updated = "2026-05-12"
+path = "docs/rfd/0002.md"
+discussion = ""
+related_prd = "0005-prd-skill-migration.md"
+
+[[rfds]]
+number = "0003"
+title = "SemVer, capability model, Sigstore signing"
+state = "Committed"
+authors = ["ar4mirez"]
+labels = ["v2", "versioning", "security", "capabilities", "sigstore", "manifest"]
+created = "2026-05-12"
+updated = "2026-05-12"
+path = "docs/rfd/0003.md"
+discussion = ""
+related_prd = "0003-prd-plugin-loader.md"
+
+[[rfds]]
+number = "0004"
+title = "Methodology hooks — default built-in + plugin enhancement"
+state = "Committed"
+authors = ["ar4mirez"]
+labels = ["v2", "methodology", "hooks", "extensibility", "ralph"]
+created = "2026-05-12"
+updated = "2026-05-12"
+path = "docs/rfd/0004.md"
+discussion = ""
+related_prd = "0004-prd-methodology.md"
+
+[[rfds]]
+number = "0005"
+title = "Component lifecycle interface as v2 plugin loader"
+state = "Committed"
+authors = ["ar4mirez"]
+labels = ["v2", "plugin-loader", "lifecycle", "foundation", "architecture"]
+created = "2026-05-12"
+updated = "2026-05-12"
+path = "docs/rfd/0005.md"
+discussion = ""
+related_prd = "0002-prd-core.md"
+
+[[rfds]]
+number = "0006"
+title = "samuel run [methodology] — Ralph as default, CLI-mutation pattern"
+state = "Committed"
+authors = ["ar4mirez"]
+labels = ["v2", "cli", "methodology", "ralph", "toon", "prompts"]
+created = "2026-05-12"
+updated = "2026-05-12"
+path = "docs/rfd/0006.md"
+discussion = ""
+related_prd = "0004-prd-methodology.md"
+
+[[rfds]]
+number = "0007"
+title = "Plugin migration from v1 skills"
+state = "Committed"
+authors = ["ar4mirez"]
+labels = ["v2", "migration", "plugins", "registry", "starter-pack"]
+created = "2026-05-12"
+updated = "2026-05-12"
+path = "docs/rfd/0007.md"
+discussion = ""
+related_prd = "0005-prd-skill-migration.md"
+
+[[rfds]]
+number = "0008"
+title = "Drop gstack and gbrain from the v2 framework"
+state = "Committed"
+authors = ["ar4mirez"]
+labels = ["v2", "scope", "deprecation", "clean-break"]
+created = "2026-05-12"
+updated = "2026-05-12"
+path = "docs/rfd/0008.md"
+discussion = ""
+related_prd = ""
