@@ -7,6 +7,37 @@ this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Built-in **Claude translator** (`internal/translator/claude/`) that
+  mirrors AGENTS.md → CLAUDE.md on every `samuel init` and `samuel sync`.
+  Default-on; controlled by `[translators.claude] enabled = true` in
+  `samuel.toml`. Files without the translator's autogen marker
+  (v1-authored or hand-edited CLAUDE.md) are preserved unless
+  `--force` is set.
+
+### Changed
+
+- **Agent-agnostic architecture: deliberate, scoped Claude carve-out.**
+  Claude Code is the only major coding assistant that does not read
+  AGENTS.md natively. Requiring every Samuel user to install a plugin
+  for the trivial mirror was friction without payoff, so the mirror is
+  now built in. Every richer translator surface (per-folder rule files,
+  glob matchers, agent prompts, future tools) still belongs in plugins.
+  The agnostic-check CI gate has been narrowed accordingly: `CLAUDE.md`
+  may appear in framework code; `.claude/`, `.cursor/`, `.codex/`, and
+  the literal "Cursor" / "Codex CLI" tokens remain forbidden.
+- `samuel doctor` no longer suggests installing `claude-translator`
+  (built in) or `codex-translator` (Codex reads AGENTS.md natively).
+  The `cursor-translator` suggestion remains because Cursor's rule
+  surface is richer than a flat mirror.
+- `samuel init` adds a "mirror AGENTS.md → CLAUDE.md for Claude Code"
+  line to the pre-init plan, and the success summary reports the
+  translator's create/update/skip counts.
+- v1 migration warning rephrased: pre-existing CLAUDE.md is still left
+  untouched, but the message now points users at the opt-in path
+  (delete + `samuel sync`).
+
 ## [v2.0.0] — Public release
 
 PRD: [0006-prd-polish-launch.md](.samuel/tasks/0006-prd-polish-launch.md)

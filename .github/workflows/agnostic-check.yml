@@ -1,10 +1,16 @@
 name: Agnostic check
 
-# RFD 0002: Samuel v2 must be agent-agnostic. AGENTS.md is canonical;
-# any reference to CLAUDE.md, .claude/, .cursor/, Codex, or other
-# tool-specific paths inside internal/ is a leak that belongs in a
-# translator plugin, not the framework. This check fails the build if
-# such a leak appears.
+# RFD 0002: Samuel v2 is agent-agnostic with a deliberate, scoped
+# carve-out for Claude. The carve-out exists because Claude Code is the
+# only major coding assistant that does not read AGENTS.md natively, so
+# the trivial AGENTS.md → CLAUDE.md mirror is shipped as a built-in
+# translator under internal/translator/claude/. Every richer translator
+# (Cursor rules, future tools, anything non-trivial) still belongs in a
+# plugin.
+#
+# Concretely: CLAUDE.md may appear in framework code; .claude/, .cursor/,
+# .codex/, "Cursor", and "Codex CLI" may not. Any line marked
+# "agnostic-allow" is an explicit migration helper opt-out.
 
 on:
   push:
@@ -41,7 +47,11 @@ jobs:
           #     anti-coupling, not coupling.
           #   - any line tagged "agnostic-allow" — explicit opt-out for
           #     PRD-mandated migration helpers (e.g. v1 leftover hint).
-          PATTERNS='CLAUDE\.md|\.claude/|\.cursor/|\.codex/|Cursor|Codex CLI'
+          # CLAUDE.md is now an allowed string (Claude carve-out — see
+          # internal/translator/claude/). The other patterns remain
+          # forbidden because they represent tool-specific surfaces that
+          # still belong in plugins.
+          PATTERNS='\.claude/|\.cursor/|\.codex/|Cursor|Codex CLI'
           HITS=$(grep -RInE "$PATTERNS" internal/ cmd/ 2>/dev/null \
             | grep -v -E '_test\.go:' \
             | grep -v 'agnostic-allow' \

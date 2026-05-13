@@ -9,6 +9,7 @@ import (
 
 	"github.com/samuelpkg/samuel/internal/config"
 	"github.com/samuelpkg/samuel/internal/sync"
+	"github.com/samuelpkg/samuel/internal/translator/claude"
 	"github.com/samuelpkg/samuel/internal/ui"
 )
 
@@ -68,6 +69,8 @@ func runSync(cmd *cobra.Command, _ []string) error {
 		return renderStructuredError(err)
 	}
 
+	mirror := runClaudeMirror(cwd, maxDepth, force, dryRun)
+
 	if JSONMode(cmd) {
 		ui.PrintJSON(commandPath(cmd), map[string]any{
 			"initialized": initialized,
@@ -81,12 +84,83 @@ func runSync(cmd *cobra.Command, _ []string) error {
 				"skipped": len(res.Skipped),
 				"errors":  len(res.Errors),
 			},
+			"claude_mirror": claudeMirrorJSON(mirror),
 		})
 		return nil
 	}
 
 	renderSyncHuman(cwd, res, dryRun)
+	renderClaudeMirrorHuman(cwd, mirror)
 	return nil
+}
+
+// runClaudeMirror invokes the built-in AGENTS.md → CLAUDE.md translator
+// when enabled in the project config. Returns nil when disabled or when
+// the project has no samuel.toml yet — sync's smart-bare-invocation
+// path needs to stay side-effect-free.
+func runClaudeMirror(root string, maxDepth int, force, dryRun bool) *claude.Result {
+	cfg, err := config.Load(root)
+	if err != nil {
+		return nil
+	}
+	if cfg.Translators == nil || cfg.Translators.Claude == nil || !cfg.Translators.Claude.Enabled {
+		return nil
+	}
+	res, err := claude.Mirror(claude.Options{
+		RootDir:       root,
+		MaxDepth:      maxDepth,
+		Force:         force,
+		DryRun:        dryRun,
+		SkipOverrides: overridesFromConfig(root),
+	})
+	if err != nil {
+		return &claude.Result{Errors: []error{err}}
+	}
+	return res
+}
+
+func claudeMirrorJSON(r *claude.Result) map[string]any {
+	if r == nil {
+		return nil
+	}
+	return map[string]any{
+		"created": r.Created,
+		"updated": r.Updated,
+		"skipped": r.Skipped,
+		"errors":  stringifyErrors(r.Errors),
+		"counts": map[string]int{
+			"created": len(r.Created),
+			"updated": len(r.Updated),
+			"skipped": len(r.Skipped),
+			"errors":  len(r.Errors),
+		},
+	}
+}
+
+func renderClaudeMirrorHuman(root string, r *claude.Result) {
+	if r == nil {
+		return
+	}
+	if len(r.Created)+len(r.Updated)+len(r.Skipped)+len(r.Errors) == 0 {
+		return
+	}
+	ui.Print("")
+	ui.Bold("Claude translator")
+	for _, p := range r.Created {
+		rel, _ := filepath.Rel(root, p)
+		ui.SuccessItem(1, "create %s", rel)
+	}
+	for _, p := range r.Updated {
+		rel, _ := filepath.Rel(root, p)
+		ui.SuccessItem(1, "update %s", rel)
+	}
+	for _, p := range r.Skipped {
+		rel, _ := filepath.Rel(root, p)
+		ui.Dim("  - skip %s (user-customized)", rel)
+	}
+	for _, e := range r.Errors {
+		ui.ErrorItem(1, "%v", e)
+	}
 }
 
 // overridesFromConfig loads samuel.toml from cwd and pulls the [sync.*]

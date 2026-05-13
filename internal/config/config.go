@@ -39,6 +39,7 @@ type Config struct {
 	Methodology        map[string]Methodology `toml:"methodology,omitempty"`
 	Guardrails         *Guardrails            `toml:"guardrails,omitempty"`
 	Registries         []Registry             `toml:"registries,omitempty"`
+	Translators        *Translators           `toml:"translators,omitempty"`
 }
 
 // PluginEntry is one [[plugins]] block in samuel.toml.
@@ -82,6 +83,22 @@ type Registry struct {
 	Default bool   `toml:"default,omitempty"`
 }
 
+// Translators groups built-in translator settings. Today the only
+// built-in translator is the Claude AGENTS.md → CLAUDE.md mirror; every
+// other tool ships as a registry plugin. The carve-out exists because
+// Claude Code is the lone outlier that does not read AGENTS.md
+// natively, and shipping the trivial mirror as a plugin was friction
+// without payoff.
+type Translators struct {
+	Claude *ClaudeTranslator `toml:"claude,omitempty"`
+}
+
+// ClaudeTranslator configures the built-in AGENTS.md → CLAUDE.md
+// mirror. Enabled defaults to true.
+type ClaudeTranslator struct {
+	Enabled bool `toml:"enabled"`
+}
+
 // Defaults returns the zero-value-with-sensible-defaults Config used
 // when a project has no samuel.toml yet (e.g. before `samuel init`).
 func Defaults() *Config {
@@ -103,6 +120,9 @@ func Defaults() *Config {
 		},
 		Registries: []Registry{
 			{Name: "official", URL: "github.com/samuelpkg/samuel-registry", Default: true},
+		},
+		Translators: &Translators{
+			Claude: &ClaudeTranslator{Enabled: true},
 		},
 	}
 }

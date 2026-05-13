@@ -257,17 +257,20 @@ func renderDoctorHuman(checks []checkResult, suggestions []string, unmanaged []s
 
 // suggestTranslators looks for known coding-assistant binaries on PATH
 // and suggests installing the matching translator plugin per RFD 0002 §1.
-// The plugins themselves arrive in Milestone 5; doctor just hints. The
-// per-tool labels live next to the binary name so future translator
-// plugins can replace this map with manifest-driven discovery.
+//
+// Claude is intentionally absent: the built-in Claude translator under
+// internal/translator/claude/ handles AGENTS.md → CLAUDE.md mirroring,
+// so no plugin is needed.
+//
+// Tools that read AGENTS.md natively are also absent — suggesting a
+// no-op translator install would be misleading.
+//
+// Tools with a richer-than-mirror surface (per-folder rule files, glob
+// matchers, agent prompts) stay in plugins because the mapping is
+// non-trivial.
 func suggestTranslators() []string {
-	// agnostic-allow: PRD 0002 §7.7 — translator suggestion is the one
-	// place doctor names tool-specific products. The hint shifts the
-	// tool-coupling to a plugin the user installs, not the framework.
 	candidates := map[string]string{
-		"claude": "claude-translator (Anthropic Claude Code)", // agnostic-allow: PRD 0002 §7.7
-		"codex":  "codex-translator (OpenAI Codex CLI)",       // agnostic-allow: PRD 0002 §7.7
-		"cursor": "cursor-translator (Cursor)",                // agnostic-allow: PRD 0002 §7.7
+		"cursor": "cursor-translator (Cursor)", // agnostic-allow: PRD 0002 §7.7
 	}
 	var out []string
 	for bin, label := range candidates {

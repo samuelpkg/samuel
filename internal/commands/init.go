@@ -15,6 +15,7 @@ import (
 	"github.com/samuelpkg/samuel/internal/lock"
 	"github.com/samuelpkg/samuel/internal/plugin"
 	"github.com/samuelpkg/samuel/internal/sync"
+	"github.com/samuelpkg/samuel/internal/translator/claude"
 	"github.com/samuelpkg/samuel/internal/ui"
 )
 
@@ -171,11 +172,12 @@ func runInit(cmd *cobra.Command, args []string) error {
 		return renderStructuredError(err)
 	}
 
-	// PRD 0002 §6.12 requires a one-time migration warning when a v1
-	// artifact is present. The framework otherwise stays agent-agnostic;
-	// this stat is read-only and never mutates the file.
-	if _, err := os.Stat(filepath.Join(flags.absTargetDir, "CLAUDE.md")); err == nil { // agnostic-allow: PRD 0002 §6.12 migration hint
-		ui.Warn("Found existing v1 context file at the project root; leaving it untouched (Samuel v2 writes AGENTS.md only)") // agnostic-allow: PRD 0002 §6.12 migration hint
+	// Pre-existing CLAUDE.md at the project root: the built-in Claude
+	// translator skips files without our autogen marker, so anything a
+	// user (or v1) wrote by hand is preserved. The warning tells them
+	// how to opt into managed mirroring if that's what they want.
+	if _, err := os.Stat(filepath.Join(flags.absTargetDir, "CLAUDE.md")); err == nil {
+		ui.Warn("Found existing CLAUDE.md; leaving it untouched. Delete it and run `samuel sync` to let Samuel manage CLAUDE.md as an AGENTS.md mirror.")
 	}
 
 	if !displayAndConfirm(flags) {
@@ -237,7 +239,20 @@ func runInit(cmd *cobra.Command, args []string) error {
 		}).Wrap(syncErr))
 	}
 
-	return reportInitSuccess(cmd, flags, results, syncRes)
+	// 6. Run the built-in Claude translator so CLAUDE.md mirrors land
+	// alongside every AGENTS.md the sync step produced. The config we
+	// just wrote enables this by default; users can flip it off in
+	// samuel.toml.
+	var mirrorRes *claude.Result
+	if cfg.Translators != nil && cfg.Translators.Claude != nil && cfg.Translators.Claude.Enabled {
+		mirrorRes, _ = claude.Mirror(claude.Options{
+			RootDir:  flags.absTargetDir,
+			MaxDepth: -1,
+			Force:    flags.force,
+		})
+	}
+
+	return reportInitSuccess(cmd, flags, results, syncRes, mirrorRes)
 }
 
 // displayAndConfirm prints the planned actions and (interactively)
@@ -255,6 +270,7 @@ func displayAndConfirm(f *initFlags) bool {
 	ui.ListItem(1, "write %s", filepath.Join(f.absTargetDir, config.ProjectFile))
 	ui.ListItem(1, "write %s", filepath.Join(f.absTargetDir, "AGENTS.md"))
 	ui.ListItem(1, "generate per-folder AGENTS.md under %s", f.absTargetDir)
+	ui.ListItem(1, "mirror AGENTS.md → CLAUDE.md for Claude Code")
 	ui.ListItem(1, "install built-ins under ~/.samuel/builtins/")
 	fmt.Print("\nProceed? [Y/n] ")
 	var ans string
@@ -298,7 +314,7 @@ func runInitStatus(cmd *cobra.Command, f *initFlags) error {
 
 // reportInitSuccess prints the post-init summary in either human or
 // JSON form.
-func reportInitSuccess(cmd *cobra.Command, f *initFlags, results []plugin.InstallResult, syncRes *sync.Result) error {
+func reportInitSuccess(cmd *cobra.Command, f *initFlags, results []plugin.InstallResult, syncRes *sync.Result, mirrorRes *claude.Result) error {
 	if f.jsonMode {
 		components := make([]map[string]any, 0, len(results))
 		for _, r := range results {
@@ -309,14 +325,22 @@ func reportInitSuccess(cmd *cobra.Command, f *initFlags, results []plugin.Instal
 				"skipped":           r.Skipped,
 			})
 		}
-		ui.PrintJSON(commandPath(cmd), map[string]any{
+		payload := map[string]any{
 			"path":         f.absTargetDir,
 			"project_name": f.projectName,
 			"created":      append(syncRes.Created, filepath.Join(f.absTargetDir, "AGENTS.md")),
 			"updated":      syncRes.Updated,
 			"skipped":      syncRes.Skipped,
 			"components":   components,
-		})
+		}
+		if mirrorRes != nil {
+			payload["claude_mirror"] = map[string]any{
+				"created": mirrorRes.Created,
+				"updated": mirrorRes.Updated,
+				"skipped": mirrorRes.Skipped,
+			}
+		}
+		ui.PrintJSON(commandPath(cmd), payload)
 		return nil
 	}
 	ui.Success("Initialized Samuel in %s", f.absTargetDir)
@@ -325,6 +349,10 @@ func reportInitSuccess(cmd *cobra.Command, f *initFlags, results []plugin.Instal
 	ui.SuccessItem(1, ".samuel/ layout: created")
 	ui.SuccessItem(1, "AGENTS.md (root + per-folder): %d created, %d updated, %d skipped",
 		len(syncRes.Created), len(syncRes.Updated), len(syncRes.Skipped))
+	if mirrorRes != nil {
+		ui.SuccessItem(1, "CLAUDE.md mirror: %d created, %d updated, %d skipped",
+			len(mirrorRes.Created), len(mirrorRes.Updated), len(mirrorRes.Skipped))
+	}
 	if !f.minimal {
 		fmt.Println()
 		ui.Bold("Next steps:")
