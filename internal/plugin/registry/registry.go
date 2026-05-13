@@ -1,23 +1,32 @@
 // Package registry implements the plugin index protocol Samuel v2 uses
 // to discover installable plugins.
 //
-// The on-disk schema is `index.toml` (one file per registry):
+// The on-disk schema is `index.toml` (one file per registry). Two TOML
+// shapes are accepted; both decode into the same in-memory Index:
+//
+// Array-of-tables (preferred, matches the official registry generator):
 //
 //	schema_version = 1
 //
-//	[plugin.go-guide]
-//	repo = "github.com/samuelpkg/samuel-go-guide"
-//	latest = "1.4.2"
+//	[[plugins]]
+//	name        = "go-guide"
+//	repo        = "github.com/samuelpkg/samuel-go-guide"
+//	latest      = "1.4.2"
 //	description = "Go language guardrails and patterns"
-//	categories = ["language"]
-//	tags = ["go", "golang"]
-//	kind = "skill"           # optional
+//	categories  = ["language"]
+//	tags        = ["go", "golang"]
+//	kind        = "skill"           # optional
+//
+// Map-of-tables (legacy):
 //
 //	[plugin.mcp-builder]
 //	repo = "github.com/anthropics/skills"
 //	subpath = "mcp-builder"
 //	latest = "main"
 //	upstream = true
+//
+// When both shapes appear in the same file, array entries override map
+// entries on name collision (array is treated as the newer source).
 //
 // A registry source URL can be:
 //
@@ -394,16 +403,67 @@ func (c *Client) fetch(ctx context.Context, fullURL string) ([]byte, error) {
 	return io.ReadAll(resp.Body)
 }
 
+// rawIndex is an intermediate decode target that accepts both TOML
+// shapes documented on the package. parseIndex normalizes it into the
+// public Index (always keyed by name).
+type rawIndex struct {
+	SchemaVersion int               `toml:"schema_version"`
+	PluginMap     map[string]Plugin `toml:"plugin"`
+	PluginList    []namedPlugin     `toml:"plugins"`
+}
+
+// namedPlugin mirrors Plugin with an explicit `name` field so [[plugins]]
+// entries can carry their identity inline.
+type namedPlugin struct {
+	Name        string   `toml:"name"`
+	Repo        string   `toml:"repo"`
+	Subpath     string   `toml:"subpath,omitempty"`
+	Latest      string   `toml:"latest"`
+	Versions    []string `toml:"versions,omitempty"`
+	Description string   `toml:"description,omitempty"`
+	Categories  []string `toml:"categories,omitempty"`
+	Tags        []string `toml:"tags,omitempty"`
+	Kind        string   `toml:"kind,omitempty"`
+	Upstream    bool     `toml:"upstream,omitempty"`
+}
+
+func (np namedPlugin) toPlugin() Plugin {
+	return Plugin{
+		Repo:        np.Repo,
+		Subpath:     np.Subpath,
+		Latest:      np.Latest,
+		Versions:    np.Versions,
+		Description: np.Description,
+		Categories:  np.Categories,
+		Tags:        np.Tags,
+		Kind:        np.Kind,
+		Upstream:    np.Upstream,
+	}
+}
+
 func parseIndex(body []byte) (*Index, error) {
-	var idx Index
-	if err := toml.Unmarshal(body, &idx); err != nil {
+	var raw rawIndex
+	if err := toml.Unmarshal(body, &raw); err != nil {
 		return nil, (&errors.Error{
 			Component:   Component,
 			Problem:     "registry index.toml is not valid TOML",
 			Recoverable: true,
 		}).Wrap(err)
 	}
-	return &idx, nil
+	idx := &Index{
+		SchemaVersion: raw.SchemaVersion,
+		Plugins:       make(map[string]Plugin, len(raw.PluginMap)+len(raw.PluginList)),
+	}
+	for name, p := range raw.PluginMap {
+		idx.Plugins[name] = p
+	}
+	for _, np := range raw.PluginList {
+		if np.Name == "" {
+			continue
+		}
+		idx.Plugins[np.Name] = np.toPlugin()
+	}
+	return idx, nil
 }
 
 // NotFoundError is returned by FindFirst when no source carries the

@@ -127,9 +127,21 @@ users (AGENTS.md replaces CLAUDE.md; install the
 files have been ported to plugins under `github.com/samuelpkg/samuel-<name>`;
 no plugin authoring CLI yet — that ships in v2.1).
 
-## [v2.0.0-rc.3] — Final soak (planned)
+## [v2.0.0-rc.3] — Final soak
 
 Final fixes from rc.2 feedback. CHANGELOG cleanup. No new features.
+
+### Fixed
+
+- Registry parser now accepts both the legacy `[plugin.<name>]` map shape
+  and the array-of-tables `[[plugins]]` shape that the official registry
+  generator emits. rc.2 only understood the former, so every
+  `samuel search`, `samuel info`, `samuel install`, and `samuel update <name>`
+  against the live registry returned `plugin not found` even though the
+  index was fetched and cached correctly. `Index.Plugins` remains
+  `map[string]Plugin` so no caller had to change; the new format is
+  normalized inside `parseIndex`. Regression tests added for both shapes
+  and a mixed-shape file.
 
 ## [v2.0.0-rc.2] — Polish + Launch (Milestone 6)
 

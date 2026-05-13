@@ -173,3 +173,80 @@ func TestResolveURL_GitHubShorthand(t *testing.T) {
 		t.Errorf("resolveURL got %s", got)
 	}
 }
+
+// arrayFixtureIndex mirrors the official registry generator output, which
+// emits [[plugins]] entries with an inline `name` field rather than the
+// [plugin.<name>] map shape used by the legacy fixture.
+const arrayFixtureIndex = `
+schema_version = 1
+
+[[plugins]]
+name        = "actix-web"
+repo        = "github.com/samuelpkg/samuel-actix-web"
+latest      = "1.0.0"
+description = "Actix-web guardrails"
+categories  = ["framework"]
+tags        = ["rust"]
+
+[[plugins]]
+name        = "claude-translator"
+repo        = "github.com/samuelpkg/samuel-claude-translator"
+latest      = "0.1.0"
+description = "Anthropic Claude Code translator"
+tags        = ["translator"]
+kind        = "wasm"
+`
+
+func TestLoadIndex_ArrayOfTablesShape(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "index.toml")
+	if err := os.WriteFile(path, []byte(arrayFixtureIndex), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	c := NewClient(t.TempDir())
+	idx, err := c.LoadIndex(context.Background(), Source{Name: "test", URL: "file://" + path}, true)
+	if err != nil {
+		t.Fatalf("LoadIndex: %v", err)
+	}
+	if p, ok := idx.Plugins["actix-web"]; !ok {
+		t.Fatalf("actix-web missing from index: %+v", idx.Plugins)
+	} else if p.Latest != "1.0.0" || p.Repo != "github.com/samuelpkg/samuel-actix-web" {
+		t.Errorf("actix-web fields not parsed: %+v", p)
+	}
+	if p, ok := idx.Plugins["claude-translator"]; !ok {
+		t.Fatalf("claude-translator missing from index")
+	} else if p.Kind != "wasm" {
+		t.Errorf("claude-translator kind not parsed: %+v", p)
+	}
+}
+
+func TestLoadIndex_MixedShapes(t *testing.T) {
+	const mixed = `
+schema_version = 1
+
+[plugin.go-guide]
+repo = "github.com/samuelpkg/samuel-go-guide"
+latest = "1.4.2"
+
+[[plugins]]
+name   = "react-helper"
+repo   = "github.com/samuelpkg/samuel-react-helper"
+latest = "0.1.0"
+`
+	dir := t.TempDir()
+	path := filepath.Join(dir, "index.toml")
+	if err := os.WriteFile(path, []byte(mixed), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	c := NewClient(t.TempDir())
+	idx, err := c.LoadIndex(context.Background(), Source{Name: "test", URL: "file://" + path}, true)
+	if err != nil {
+		t.Fatalf("LoadIndex: %v", err)
+	}
+	if _, ok := idx.Plugins["go-guide"]; !ok {
+		t.Errorf("legacy map entry lost")
+	}
+	if _, ok := idx.Plugins["react-helper"]; !ok {
+		t.Errorf("array entry lost")
+	}
+}
