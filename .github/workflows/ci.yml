@@ -1,5 +1,11 @@
 name: CI
 
+# Node 24 default for every JS action in this workflow. Becomes a no-op
+# on 2026-06-02 when GitHub flips the runner default; safe to leave or
+# remove then.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 on:
   push:
     branches: [main]
@@ -35,7 +41,7 @@ jobs:
       - name: Test
         run: go test -race -coverprofile=coverage.out ./...
       - name: Upload coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v6
         with:
           files: ./coverage.out
           fail_ci_if_error: false
@@ -50,7 +56,11 @@ jobs:
         with:
           go-version: '1.24'
           cache: true
-      - uses: golangci/golangci-lint-action@v4
+      # Pinned to the last v6 of golangci-lint-action because v7+ forces
+      # golangci-lint v2, which is a config-format migration out of scope
+      # for this PR. The Node-version warning is suppressed via the
+      # workflow-level FORCE_JAVASCRIPT_ACTIONS_TO_NODE24 env above.
+      - uses: golangci/golangci-lint-action@v6
         with:
           version: latest
           args: --timeout=5m
