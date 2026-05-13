@@ -7,6 +7,12 @@ this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v2.0.0-rc.4] — Claude translator carve-out
+
+Built-in AGENTS.md → CLAUDE.md mirror lands in core. Agent-agnostic
+core is preserved with a deliberate, scoped exception for Claude — the
+only major coding assistant that does not read AGENTS.md natively.
+
 ### Added
 
 - Built-in **Claude translator** (`internal/translator/claude/`) that
