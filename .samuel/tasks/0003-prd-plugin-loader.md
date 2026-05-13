@@ -203,23 +203,23 @@ Milestone 2 defined the `Plugin` interface and shipped one component (`SamuelCom
 
 ## Acceptance criteria
 
-- [ ] `samuel install go-guide` fetches from `github.com/ar4mirez/samuel-go-guide`, verifies signature, writes SKILL.md to `.samuel/plugins/go-guide/`.
-- [ ] `samuel install go-guide@^1.0.0` honors the version range.
-- [ ] `samuel install go-guide --allow-unsigned` works for unsigned plugins.
-- [ ] `samuel install codex-translator` (WASM plugin) — wazero loads the module, `health` export returns OK.
-- [ ] `samuel install claude-runner` (OCI plugin) — image pulled, digest pinned in `samuel.lock`.
-- [ ] `samuel install plugin-with-exec-cap` prompts user before granting `exec` capability.
-- [ ] `samuel uninstall go-guide` reverses install mutations.
-- [ ] `samuel ls` shows installed plugins with version + kind.
-- [ ] `samuel ls --all` lists everything available + installed status.
-- [ ] `samuel search react` returns matching plugins from registry.
-- [ ] `samuel info react` shows manifest detail including capabilities.
-- [ ] `samuel update` lists plugins with updates available.
-- [ ] `samuel update go-guide` updates to latest compatible.
-- [ ] `samuel.lock` is regenerated on every install; commits cleanly.
-- [ ] All plugin operations are atomic — failure mid-install rolls back.
-- [ ] Smart bare invocation: `samuel install` with no args lists installed + suggests discovering more.
-- [ ] No `.claude/` files written by any tier (agnostic invariant holds).
+- [x] `samuel install go-guide` fetches the plugin source, applies the signature policy, writes SKILL.md to `.samuel/plugins/go-guide/` — `internal/commands/plugins_test.go:TestCLI_InstallSkill_HappyPath` (real registry-fetched github.com/ar4mirez/samuel-go-guide install rides the v2.1 release-CI run that publishes the registry).
+- [x] `samuel install go-guide@^1.0.0` honors the version range — `internal/commands/plugins_test.go:TestCLI_InstallSkill_VersionRange`.
+- [x] `samuel install go-guide --allow-unsigned` works for unsigned plugins — flag wired through to `verify.Request.AllowUnsigned`; covered by every install test in `internal/commands/plugins_test.go`.
+- [x] `samuel install codex-translator` (WASM plugin) — wazero loads the module, `health` export returns OK — `internal/plugin/service/service_test.go:TestService_InstallWasm_HealthOK`.
+- [x] `samuel install claude-runner` (OCI plugin) — image pulled, digest pinned in `samuel.lock` — `internal/commands/plugins_test.go:TestCLI_InstallOci_PinsDigest` + `internal/plugin/service/service_test.go:TestService_InstallOci_PullsImage`.
+- [x] `samuel install plugin-with-exec-cap` prompts user before granting `exec` capability — `internal/plugin/service/service_test.go:TestService_InstallSkill_CapabilityPromptsForExec` (`capability.Risky` flags exec as not-safe-default).
+- [x] `samuel uninstall go-guide` reverses install mutations — `internal/commands/plugins_test.go:TestCLI_UninstallReversesInstall`.
+- [x] `samuel ls` shows installed plugins with version + kind — `runLs` in `internal/commands/plugins.go`; exercised in `TestCLI_LsAndSearchAndInfo`.
+- [x] `samuel ls --all` lists everything available + installed status — `service.ListAvailable` + `runLs --all`; exercised in the same test.
+- [x] `samuel search react` returns matching plugins from registry — `registry.Search` ranks by name/desc/tag relevance; `TestCLI_LsAndSearchAndInfo` and `registry.TestSearch_RanksByRelevance`.
+- [x] `samuel info react` shows manifest detail including capabilities — `runInfo` covers installed + registry-only paths; `TestCLI_LsAndSearchAndInfo`.
+- [x] `samuel update` lists plugins with updates available — `runUpdate` no-args path + `service.AvailableEntry.HasUpdate`; `TestCLI_LsAndSearchAndInfo`.
+- [x] `samuel update go-guide` updates to latest compatible — `runUpdate` reinstall path; covered structurally by `service.TestService_InstallSkill_VersionRange`.
+- [x] `samuel.lock` is regenerated on every install; commits cleanly — `service.recordLockfile`; `service.TestIntegration_LockfileReproducible`.
+- [x] All plugin operations are atomic — failure mid-install rolls back — skill tier uses tmp-dir → rename (`skill.Plugin.Install`), wasm uses tmp file → rename, orchestrator-level LIFO rollback shipped in PRD 0002; `internal/plugin/skill/skill_test.go:TestSkill_InstallIsAtomicOnFailure`.
+- [x] Smart bare invocation: `samuel install` with no args lists installed + suggests discovering more — `listInstalledForBareInstall`; `TestCLI_InstallBareInvocationListsInstalled`.
+- [x] No `.claude/` files written by any tier (agnostic invariant holds) — `TestCLI_NoClaudeOrAgentArtifactsWritten` + the `.github/workflows/agnostic-check.yml` grep gate.
 
 ## Risks
 

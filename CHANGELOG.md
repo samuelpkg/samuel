@@ -7,6 +7,83 @@ this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v2.0.0-beta.1] — Plugin Loader (Milestone 3)
+
+PRD: [0003-prd-plugin-loader.md](.samuel/tasks/0003-prd-plugin-loader.md)
+
+### Added
+
+- `internal/plugin/manifest`: `samuel-plugin.toml` parser + validator
+  with structured `*errors.Error` (`SAM-MANIFEST-001`). Schema covers
+  `[samuel]` framework/protocol ranges, `[provides]`, `[requires]`,
+  `[capabilities]`, `[metadata]`, plus tier-specific `[wasm]` /
+  `[oci]` blocks per RFD 0003.
+- `internal/plugin/semver`: hand-rolled SemVer 2.0 + Cargo range
+  resolver (`^X.Y.Z`, `~X.Y.Z`, `>=X,<Y`, `*`, exact). Prereleases
+  rejected unless the resolver is called with `AllowPrerelease`.
+- `internal/plugin/capability`: capability namespace
+  (`filesystem.read/write`, `exec`, `network.outbound`, `samuel.api`,
+  `assistant.invoke`); safe-default skip rule (`filesystem.read:/workspace`-
+  only never prompts), `--yes` flag short-circuit, doublestar-backed
+  path-glob matching, host pattern matching for outbound allowlists.
+- `internal/plugin/registry`: `index.toml` schema parser, multi-source
+  first-match-wins resolver, on-disk cache at
+  `~/.samuel/cache/registries/<host>/<path>/index.toml` with 24h TTL
+  and stale-cache fallback when the network is down. Supports
+  `github.com/owner/repo`, raw HTTPS, and `file://` sources.
+- `internal/plugin/verify`: signature-policy gate (`Verifier` interface +
+  `StubVerifier` for v2.0). Cache at `~/.samuel/cache/verify/` keyed
+  by samuel binary version. Identity patterns OR-ed per RFD 0003 #3.
+  `--allow-unsigned` flag override; `[security]` block from
+  `samuel.toml` plus `allow_unsigned_for` registry allowlist.
+- `internal/plugin/source`: `Fetcher` abstraction with three transports
+  (`file://`, `https://`, `github.com/owner/repo` shorthand). `git
+  clone --depth=1 --branch=<ref>` for production; file:// for tests.
+- `internal/plugin/skill`: skill-tier loader. Atomic `tmp →
+  rename` install of `SKILL.md` + assets into
+  `<project>/.samuel/plugins/<name>/`, frontmatter-shape validation
+  on Check, idempotent uninstall.
+- `internal/plugin/wasm`: wazero-backed WASM-tier loader. Embedded
+  pure-Go runtime; per-process compilation cache at
+  `~/.samuel/cache/wasm-compiled`; host module `samuel.*` exposing
+  `log`, `fs_read`, `fs_write`, `exec`, `net_outbound`, `config_get`,
+  `callback`, each capability-gated through `HostState.Authorize`.
+  Module protocol enforced via the `samuel_protocol_version()` export
+  (RFD 0001 #2). Tests use a hand-encoded fixture wasm to exercise
+  the full Install → Check (`health()`) path without external tooling.
+- `internal/plugin/oci`: OCI-tier loader. Runtime detection order
+  Podman → Docker → `SAMUEL_RUNTIME` env override; image-name regex
+  ported from `samuel_v1/internal/core/docker.go:60-75`; canonical
+  mount layout (`/workspace`, `/skills`, `/.samuel/run`,
+  `/plugin/config`, `/samuel-bridge`); `--user $UID:$GID`,
+  env-var allowlist filter, deny-by-default network policy
+  (`--network none` unless outbound capability granted).
+- `internal/plugin/oci/bridge` + `api/proto/plugin/v1/plugin.proto`:
+  per-container Unix-socket gRPC bridge protocol per RFD 0001
+  resolution. v2.0 ships JSON-over-Unix-socket as the wire transport
+  to land end-to-end tests today; generated gRPC bindings ride v2.1
+  alongside the first real OCI plugin (claude-runner).
+- `internal/plugin/service`: install-side facade that orchestrates
+  registry resolve → source fetch → signature verify → capability
+  decide → tier-specific Install → samuel.lock + samuel.toml record.
+  Handles uninstall replay, `ListInstalled` / `ListAvailable`, and the
+  Update-flow refresh.
+- CLI commands `samuel install [<plugin>[@version-range]]`,
+  `samuel uninstall <plugin>`, `samuel ls [name]` (`--all`, `--type`),
+  `samuel search <query>`, `samuel info <plugin>`,
+  `samuel update [<plugin>]` (`--all`). Each supports `--json`.
+  Smart bare invocation: `samuel install` with no plugin name lists
+  installed plugins and points to `samuel search`.
+
+### Notes
+
+- Sigstore (`sigstore-go`) integration ships in v2.1; v2.0 uses a
+  policy-aware `StubVerifier` that honors `[security]` /
+  `--allow-unsigned` so users can install today.
+- Generated gRPC bindings (protoc-gen-go-grpc) for the OCI bridge
+  ride v2.1; the wire format on the socket is JSON-over-Unix-socket
+  with the same envelope schema as the proto messages.
+
 ## [v2.0.0-alpha.2] — Core (Milestone 2)
 
 PRD: [0002-prd-core.md](.samuel/tasks/0002-prd-core.md)

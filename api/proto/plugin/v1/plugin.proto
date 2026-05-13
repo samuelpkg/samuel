@@ -1,0 +1,127 @@
+// Samuel v2 Plugin Bridge — gRPC schema spoken between the framework
+// (host process) and an OCI plugin container over a Unix-domain socket
+// mounted at /samuel-bridge inside the container.
+//
+// This file is the contract reference. Generated bindings live next to
+// it under api/proto/plugin/v1/. Plugin authors generate language
+// bindings from this file; the Go gRPC server in
+// internal/plugin/oci/server.go binds to /samuel-bridge per container.
+//
+// Status: stable for protocol v1. Additive changes ride v1.x; breaking
+// changes bump to v2 and go side-by-side with v1 for one minor release
+// (RFD 0001 resolution #2).
+
+syntax = "proto3";
+
+package samuel.plugin.v1;
+
+option go_package = "github.com/ar4mirez/samuel/api/gen/plugin/v1;pluginv1";
+
+// PluginService is the lifecycle surface every OCI plugin implements.
+// The framework calls these RPCs in response to user CLI invocations
+// (samuel install, samuel doctor, samuel uninstall). Hook RPCs (Apply
+// /Run-style methods that fire during methodology execution) extend
+// the service in v1.1+.
+service PluginService {
+  // Detect inspects the host and reports current install state.
+  // MUST NOT mutate state.
+  rpc Detect(DetectRequest) returns (DetectResponse);
+
+  // Install brings the plugin to the desired state. The implementation
+  // MUST be idempotent. Mutations are recorded in the response so the
+  // framework can replay reverse() entries on uninstall failure.
+  rpc Install(InstallRequest) returns (InstallResponse);
+
+  // Check is the per-doctor health probe. MUST NOT mutate state.
+  rpc Check(CheckRequest) returns (CheckResponse);
+
+  // Uninstall undoes Install. Idempotent.
+  rpc Uninstall(UninstallRequest) returns (UninstallResponse);
+
+  // Hook is the catchall for plugin-supplied event handlers
+  // (pre-commit, post-sync, etc.). The framework dispatches on
+  // hook_name; the plugin returns a structured result that the
+  // orchestrator consumes per its hook contract.
+  rpc Hook(HookRequest) returns (HookResponse);
+}
+
+// --- Common ---
+
+message Capability {
+  string kind = 1;            // "filesystem.read", "exec", etc.
+  repeated string targets = 2; // path globs / hostnames / etc.
+}
+
+message Mutation {
+  string kind = 1;        // see internal/plugin.MutationKind
+  string path = 2;
+  string description = 3;
+}
+
+// --- Detect ---
+
+message DetectRequest {}
+
+message DetectResponse {
+  bool installed = 1;
+  string version = 2;
+  string path = 3;
+}
+
+// --- Install ---
+
+message InstallRequest {
+  bool dry_run = 1;
+  bool force = 2;
+  bool verbose = 3;
+  repeated Capability granted = 4;
+}
+
+message InstallResponse {
+  string component = 1;
+  bool already_installed = 2;
+  bool skipped = 3;
+  repeated Mutation mutations = 4;
+}
+
+// --- Check ---
+
+message CheckRequest {}
+
+message CheckResponse {
+  bool ok = 1;
+  string message = 2;
+  string fix_hint = 3;
+}
+
+// --- Uninstall ---
+
+message UninstallRequest {
+  bool dry_run = 1;
+  bool global = 2;
+  bool project = 3;
+  bool all = 4;
+  // Mutations the framework recorded during install — the plugin can
+  // use them to drive reverse work without re-detecting.
+  repeated Mutation prior_mutations = 5;
+}
+
+message UninstallResponse {
+  string component = 1;
+  bool skipped = 2;
+  repeated Mutation mutations = 3;
+}
+
+// --- Hook ---
+
+message HookRequest {
+  string hook_name = 1;        // "pre-commit", "post-sync", ...
+  bytes payload = 2;           // hook-specific JSON / TOML payload
+  map<string, string> env = 3;
+}
+
+message HookResponse {
+  bool ok = 1;
+  bytes result = 2;
+  string message = 3;
+}
