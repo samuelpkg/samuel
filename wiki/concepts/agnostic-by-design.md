@@ -2,18 +2,23 @@
 title: Agnostic by design (the cross-tool invariant)
 type: concept
 created: 2026-05-12
-updated: 2026-05-12
+updated: 2026-05-13
 sources: []
 tags: [v2, v2-decision, invariant]
 ---
 
 # Agnostic by design
 
-v2 is a framework, not a Claude wrapper. **Nothing in the framework binary or default-installed plugins assumes a specific AI coding assistant.** This page is the invariant that future Samuel work must not violate.
+> **Post-launch update (2026-05-13).** Most of this page captures the pre-launch design intent. Shipped reality differs in one scoped way: **the `AGENTS.md → CLAUDE.md` mirror ships built-in** (`internal/translator/claude/`), introduced in v2.0.0-rc.4 after manual testing showed every other major coding assistant (Codex, Aider, Gemini, Cline, Cursor) reads AGENTS.md natively while Claude Code does not. Requiring every Samuel user to install a plugin for the trivial mirror was friction without payoff. Every richer translator surface (`.cursor/rules/`, `.codex/*`, future tools) still lives in plugins. The `agnostic-check` CI gate was narrowed accordingly: `CLAUDE.md` is now an allowed string in framework code; `.claude/`, `.cursor/`, `.codex/`, `Cursor`, `Codex CLI` remain forbidden. See [[synthesis/v2-rc-cycle-lessons]] for the decision rationale.
 
-## The invariant
+v2 is a framework, not a Claude wrapper. **Nothing in the framework binary or default-installed plugins assumes a specific AI coding assistant — except for the deliberate, scoped Claude carve-out documented in the callout above.** This page captures the invariant that the rest of Samuel's framework code must not violate.
 
-Stated formally: **a user installing Samuel without any translator plugins gets a fully functional, agent-agnostic toolchain.** No CLAUDE.md is written. No `.claude/` directory is created. No Anthropic-specific endpoint is required. No Anthropic env var is mandatory.
+## The invariant (as of v2.0.0-rc.4+)
+
+A user installing Samuel without any translator plugins gets:
+
+- A `CLAUDE.md` mirror of `AGENTS.md` (built-in Claude translator; can be disabled with `[translators.claude] enabled = false`).
+- **Nothing else tool-specific.** No `.claude/` directory. No `.cursor/rules/`. No `.codex/*`. No Anthropic-specific endpoint. No Anthropic env var.
 
 Any agent-specific behavior comes from a **translator plugin** installed on demand:
 - `claude-translator` — emits CLAUDE.md, writes `.claude/settings.json` hooks

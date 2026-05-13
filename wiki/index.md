@@ -83,6 +83,7 @@ See [[CLAUDE]] for conventions.
 - [[synthesis/v2-skill-migration-plan]] — how the 78 v1 skills become v2 plugins `#v2-decision`
 - [[synthesis/v2-template-and-docs]] — shrink CLAUDE.md template + restructure mkdocs site `#v2-decision`
 - [[synthesis/v2-rfds-to-write]] — eight inaugural v2 RFDs mapping wiki concepts to public docs `#v2-decision`
+- [[synthesis/v2-rc-cycle-lessons]] — **post-launch.** rc.2 → rc.15 bug pattern, the Claude carve-out, and how the e2e suite closes the recurrence gap `#v2-decision`
 
 ## Queries
 

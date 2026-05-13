@@ -1,6 +1,6 @@
 # Samuel
 
-Samuel is a Go CLI that ships a thin framework, a plugin loader, and an opinionated methodology for working with AI coding assistants. It treats `AGENTS.md` as the canonical source of project context and lets translator plugins emit whatever tool-specific files your editor needs (`CLAUDE.md`, `.cursor/rules/`, `.codex/context.md`, …). It is **agnostic by design**.
+Samuel is a Go CLI that ships a thin framework, a plugin loader, and an opinionated methodology for working with AI coding assistants. It treats `AGENTS.md` as the canonical source of project context. Most coding assistants read `AGENTS.md` natively (Codex, Aider, Cursor, Gemini, Cline); for the ones that don't, translator plugins emit the tool-specific files needed (`.cursor/rules/`, `.codex/context.md`, …). It is **agnostic by design with one scoped exception**: because Claude Code is the lone major assistant that doesn't read `AGENTS.md` natively, the trivial `AGENTS.md → CLAUDE.md` mirror ships built-in (see [AGENTS.md](core/agents-md.md#claude-translator)) rather than forcing every Samuel user to install a plugin for it.
 
 ## What you get
 

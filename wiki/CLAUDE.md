@@ -8,10 +8,10 @@ This wiki tracks the design and rebuild of **Samuel** — an opinionated AI codi
 
 Two codebases coexist in `/Users/ar4mirez/Documents/Claude/Projects/Samuel/`:
 
-- `samuel_v1/` — the current shipped version (Go CLI, mkdocs site, ~30+ language skills, `.claude/` hooks, RFD index). Reference material only — extract patterns worth keeping.
-- `samuel_v2/` — empty target. The rebuild lives here. Goals: simplify, make extensible.
+- `samuel_v1/` — the original shipped version (Go CLI, mkdocs site, ~30+ language skills, `.claude/` hooks, RFD index). Reference material only — extract patterns worth keeping.
+- `samuel_v2/` — **shipped at v2.0.0-rc.15** as of 2026-05-13. The rebuild lives here. Goals: simplify, make extensible — both achieved. Manual-test fixture lives at `samuel_v2/examples/tetris/`; hermetic e2e suite at `samuel_v2/e2e/hermetic/`.
 
-The wiki sits between these two. It is the place where v1 patterns get studied, v2 design decisions get recorded, and the gap between them gets bridged.
+The wiki sits between these two. It is the place where v1 patterns get studied, v2 design decisions get recorded, and the gap between them gets bridged. **Post-launch**, it also ingests lessons from the v2 release-candidate cycle — see [[synthesis/v2-rc-cycle-lessons]] for the rc.2 → rc.15 review.
 
 ## Page templates
 
@@ -45,13 +45,13 @@ The wiki sits between these two. It is the place where v1 patterns get studied, 
   - **OCI plugins** — host Docker/Podman runtime. Used when full Linux userland needed (running coding assistants, language-specific tools).
 - **Coding-assistant execution**: runs in an OCI sandbox container. Claude Code first. Docker/Podman required only for this case + OCI plugins.
 - **Versioning**: **SemVer 2.0.0**. Cargo-style ranges. Three independent version axes (framework / plugin protocol / plugin). Capability-permission model declared in manifest, enforced at sandbox boundary.
-- **Signing**: **Sigstore/cosign signed-by-default** for the official registry. `--allow-unsigned` for dev.
+- **Signing**: **Sigstore/cosign signed-by-default** for the official registry, `--allow-unsigned` for dev. **v2.0 ships a policy-only `StubVerifier`** — `identity_patterns` + `allow_unsigned_for` are enforced but the Sigstore math itself rides v2.1 (sigstore-go swap). `samuel doctor` surfaces this inline as an advisory. The wire format and lockfile schema are stable across the v2.0 → v2.1 transition.
 - **Config format**: **TOML default**, YAML supported. SKILL.md frontmatter stays YAML per Agent Skills standard.
 - **Blessed WASM toolchain**: **TinyGo** first (Go-native, matches plugin author base). Rust and AssemblyScript secondary.
 - **Container runtime detect order**: Podman (rootless) → Docker → others. `SAMUEL_RUNTIME` env var overrides.
 - **gstack and gbrain dropped from v2.** Neither survives the rebuild. May reintroduce as plugins later, or extract reusable pieces as skills. v1 product opinions, not framework essentials.
 - **CLI verb**: keep `init` (not `new`). Works for both new and existing projects. `new` reserved for any future create-only verb.
-- **AGENTS.md primary, not CLAUDE.md.** v2 writes AGENTS.md by default. Tool-specific files (CLAUDE.md, Cursor rules, Continue rules) are translator plugins. See [[concepts/agents-md-primary]].
+- **AGENTS.md primary, with a scoped Claude carve-out.** v2 writes AGENTS.md by default. The `AGENTS.md → CLAUDE.md` mirror ships as a **built-in translator** (`internal/translator/claude/`) — shipped in **v2.0.0-rc.4** after manual-test data showed every other major coding assistant (Codex, Aider, Cursor, Gemini, Cline) reads AGENTS.md natively but Claude Code does not, making the mirror friction-without-payoff to require as a plugin install. Cursor rules, Codex specifics, Continue rules, and every richer tool-specific surface stay as translator plugins. See [[concepts/agents-md-primary]] and [[synthesis/v2-rc-cycle-lessons]].
 - **Sync is hook + command.** Same code path, two trigger surfaces. Runs automatically at lifecycle points + manually via `samuel sync`.
 - **No `samuel.dev` domain yet.** v2 stays on `ar4mirez.github.io/samuel/` for now. Rewrite v2 error DocsURLs to github.io URLs (no dead links). Register domain later if/when it makes sense.
 - **TOON for `.samuel/run/` structured files** (`prd.toon`, `project-snapshot.toon`, `task-context.toon`). User-observed JSON fragility outweighs the theoretical AI-emit-JSON advantage. Line-oriented rows tolerate malformations better. Markdown stays for prose-heavy progress logs.

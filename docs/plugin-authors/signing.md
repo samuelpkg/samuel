@@ -1,6 +1,8 @@
 # Signing
 
-Every plugin release is signed with **Sigstore keyless cosign** via the GitHub Actions workflow identity. Samuel verifies the signature on install and refuses unverified plugins by default.
+Plugin releases are signed with **Sigstore keyless cosign** via the GitHub Actions workflow identity, and the lockfile + manifest schemas treat signature data as a first-class field. The full cryptographic verification path is queued for **v2.1**; v2.0 ships a policy-aware `StubVerifier` that enforces `[security]` (identity patterns + `allow_unsigned_for` + `--allow-unsigned`) but does not perform Sigstore math. See [v2.0 status](#v20-status) at the bottom of this page for what that means concretely, and `samuel doctor`'s **Advisories** section for the same disclosure inline at the CLI.
+
+> The wire format and the lockfile schema are stable across the v2.0 → v2.1 transition — upgrading from the stub to the full verifier does not invalidate existing installs.
 
 ## Why keyless
 
@@ -31,7 +33,7 @@ On tag push the workflow builds the artifact (tarball for skill, .wasm for wasm,
 
 ## Verifying
 
-Samuel verifies on every install. The default policy accepts artifacts signed by the [`samuelpkg`](https://github.com/samuelpkg) and matching plugin-author orgs (configurable per registry source). The identity check is OR-ed across patterns, per [RFD 0003](../rfd/0003.md) §3:
+Samuel runs the policy check on every install. In v2.1+ this includes Sigstore signature verification; in v2.0 the policy alone gates the decision (see [v2.0 status](#v20-status)). The default policy accepts artifacts whose source identity matches [`samuelpkg`](https://github.com/samuelpkg) (and matching plugin-author orgs, configurable per registry source). The identity check is OR-ed across patterns, per [RFD 0003](../rfd/0003.md) §3:
 
 ```toml
 # samuel.toml
@@ -75,4 +77,22 @@ If verification fails, the plugin is not extracted, not installed, and not cache
 
 ## v2.0 status
 
-v2.0 ships a policy-aware `StubVerifier` that honors `[security]` + `--allow-unsigned` so users can install today. The full `sigstore-go` integration with online Rekor verification rides v2.1. The wire format and the lockfile schema are stable across the transition — upgrading from the stub to the full verifier does not invalidate existing installs.
+v2.0 ships a policy-aware `StubVerifier` ([`internal/plugin/verify/verify.go`](https://github.com/samuelpkg/samuel/blob/main/internal/plugin/verify/verify.go)) that honors `[security]` + `--allow-unsigned` so users can install today. Concretely, the stub:
+
+- ✅ enforces the `identity_patterns` glob against the plugin's `Source` URL
+- ✅ honors `allow_unsigned_for` (registry-name allowlist)
+- ✅ honors the `--allow-unsigned` CLI flag (and the matching update flag, per [Issue #2](https://github.com/samuelpkg/samuel/issues/2))
+- ✅ caches the policy decision per `(blob_digest, AllowUnsigned)` so toggling the flag re-runs the check ([Issue #2 cache-key bug](https://github.com/samuelpkg/samuel/issues/2))
+- ❌ does **not** verify a Sigstore signature cryptographically — the `cosign verify-blob` step in the diagram above is the *intended* v2.1 behavior, not what runs today
+
+`samuel doctor` prints a one-line **Advisories** section calling out the stub state, so a user inspecting their install never silently believes "verified" means "cryptographically verified" when it currently means "policy-allowed". Concretely:
+
+```text
+$ samuel doctor
+…
+Advisories:
+⚠ verifier is stubbed in v2.0 — policy is enforced but signatures are
+  not cryptographically validated. Real Sigstore verification ships in v2.1.
+```
+
+The full `sigstore-go` integration with online Rekor verification rides v2.1. The wire format and the lockfile schema are stable across the transition — upgrading from the stub to the full verifier does not invalidate existing installs. Tracking: [Issue #6](https://github.com/samuelpkg/samuel/issues/6).

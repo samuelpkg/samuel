@@ -2,10 +2,31 @@
 title: Samuel Wiki Log
 type: log
 created: 2026-05-12
-updated: 2026-05-12
+updated: 2026-05-13
 ---
 
 # Wiki Log
+
+## [2026-05-13] ingest | v2 rc.2 → rc.15 cycle lessons
+
+Samuel v2 shipped at rc.2 on 2026-05-12 ("Public release"). Within 24 hours a manual-test sweep against a fresh `samuel init` fixture surfaced 9 issues and forced 13 more release candidates before the codebase reached genuine ship-ready state.
+
+Created:
+
+- `synthesis/v2-rc-cycle-lessons.md` — full taxonomy of the bug patterns (schema drift, cache-key gaps, dispatch gaps), the Claude carve-out architectural shift, default-on-helper pattern, verifier-stub disclosure, and the structural changes (`examples/tetris/` fixture + `e2e/hermetic/` suite) that close the recurrence gap.
+
+Updated:
+
+- `CLAUDE.md` — domain section now reflects "v2 shipped at rc.15" not "empty target." "Resolved scope decisions" line about translator plugins corrected for the Claude carve-out. Signing line annotated with the v2.0 StubVerifier reality + v2.1 path.
+- `index.md` — synthesis section gains the new rc-cycle lessons page.
+
+Key findings:
+
+- **Schema drift between registry generator and parser** (rc.3) — registry emitted `[[plugins]]`, parser expected `[plugin.<name>]`. TOML parsed cleanly with zero plugins. Caught only by manual testing because unit tests used the writer's own shape.
+- **The Claude carve-out** (rc.4) — every major coding assistant except Claude reads `AGENTS.md` natively. The "no tool-specific code in core" invariant relaxed for the Claude translator only; everything else (Cursor, Codex specifics, future tools) stays in plugins. `#v2-decision`
+- **Cache keys must cover every input that affects the result** (rc.7) — verify cache keyed on digest only; `--allow-unsigned` decisions became sticky forever. Cache key now `(digest, AllowUnsigned)`.
+- **New state tiers must propagate to every dispatcher** (rc.14) — `plugin:<name>` health checks added in rc.11, but `doctor --fix` and the post-fix re-check loops both queried only the orchestrator. Took manual testing to surface.
+- **Hermetic e2e cannot fully replace live-registry e2e** — `file://` URLs route through `source.fetchFile`, not `source.fetchGit`. The hermetic tier (rc.15) covers ~80% of the manual sweep; the rc.6 (v-prefix tag fallback) and rc.9 (.git strip) fixes need the live-registry tier (Issue #10) for CLI-surface coverage.
 
 ## [2026-05-12] scope | TOON adoption for run runtime files
 
