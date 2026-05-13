@@ -1,0 +1,58 @@
+name: Feature request
+description: Propose a change to the framework, methodology, or CLI.
+title: "[feature] "
+labels: ["feature", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Substantial design changes (new plugin tier, schema change,
+        cross-cutting framework concern) should go through an
+        [RFD](https://samuelpkg.github.io/samuel/rfd/) rather than an
+        issue. Open an issue first if you're unsure which path fits.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the user-visible pain. One-paragraph max.
+      placeholder: "Today I have to … which means …"
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Concrete behavior. CLI shape, file format, sample output.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      placeholder: "Plugin? Existing flag? Workaround? Why isn't that enough?"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: tier
+    attributes:
+      label: Where does this belong?
+      options:
+        - Framework (core CLI / methodology)
+        - Plugin (skill / WASM / OCI)
+        - Translator plugin (CLAUDE.md / Cursor / Codex / other)
+        - Docs / tooling
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: extras
+    attributes:
+      label: Anything else?
+      placeholder: "Related RFDs, prior art, link to a draft branch, etc."
+    validations:
+      required: false

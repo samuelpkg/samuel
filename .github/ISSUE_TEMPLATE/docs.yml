@@ -1,0 +1,29 @@
+name: Docs issue
+description: Wrong, missing, confusing, or out-of-date documentation.
+title: "[docs] "
+labels: ["docs", "triage"]
+body:
+  - type: input
+    id: page
+    attributes:
+      label: Affected page(s)
+      description: URL on samuelpkg.github.io/samuel/ or repo-relative path.
+      placeholder: "https://samuelpkg.github.io/samuel/reference/cli/ or docs/reference/cli.md"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's wrong?
+      description: Quote the line, name the section, or describe what you expected to find.
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested fix
+      description: Optional — what would make this right?
+    validations:
+      required: false

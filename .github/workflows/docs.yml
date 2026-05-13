@@ -1,0 +1,70 @@
+name: Deploy docs
+
+# Builds the MkDocs site and publishes it to GitHub Pages.
+# Source: https://samuelpkg.github.io/samuel/
+#
+# Triggers:
+#   - push to main when docs/, mkdocs.yml, or README.md changes
+#   - release published (so versioned docs match the release)
+#   - manual via workflow_dispatch
+#
+# First-time setup: in repo Settings → Pages, set the source to
+# "GitHub Actions" once. After that, every successful run of this
+# workflow publishes to samuelpkg.github.io/samuel/.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+      - 'README.md'
+      - 'requirements-docs.txt'
+      - '.github/workflows/docs.yml'
+  release:
+    types: [published]
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-docs.txt
+      - name: Install MkDocs
+        run: pip install -r requirements-docs.txt
+      - name: mkdocs build --strict
+        run: mkdocs build --strict
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./site
+
+  deploy:
+    name: Deploy to Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

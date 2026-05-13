@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or general discussion
+    url: https://github.com/samuelpkg/samuel/discussions
+    about: Ask a question, share a use case, or discuss design.
+  - name: Security report (private)
+    url: https://github.com/samuelpkg/samuel/security/advisories/new
+    about: Privately disclose a security vulnerability. Do not open a public issue.
+  - name: Documentation
+    url: https://samuelpkg.github.io/samuel/
+    about: Read the docs (installation, CLI reference, RFDs).

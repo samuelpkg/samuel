@@ -158,3 +158,5 @@ nav:
       - FAQ: reference/faq.md
       - Cross-tool generation: reference/cross-tool.md
       - Changelog: reference/changelog.md
+  - Blog:
+      - "Samuel v2 launch": blog/samuel-v2-launch.md

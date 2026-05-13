@@ -1,0 +1,74 @@
+name: Bug report
+description: A reproducible bug in the framework or a built-in command.
+title: "[bug] "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. Bugs in plugins (anything under
+        `github.com/samuelpkg/samuel-<name>`) belong in the plugin's
+        own repo — this template is for the framework itself.
+
+  - type: input
+    id: version
+    attributes:
+      label: Samuel version
+      description: Output of `samuel version` (paste the whole line).
+      placeholder: "samuel v2.0.0-rc.2 (commit abc1234, built 2026-05-13)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install_method
+    attributes:
+      label: How did you install it?
+      options:
+        - Homebrew (ar4mirez/tap)
+        - install.sh (curl)
+        - go install
+        - Built from source
+        - Other (describe below)
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: OS + architecture
+      placeholder: "macOS 14.5 arm64 / Ubuntu 24.04 amd64 / ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Minimal commands. Show what you ran; paste the actual output.
+      placeholder: |
+        1. `samuel init my-project`
+        2. `cd my-project && samuel install …`
+        3. Observed: …
+        4. Expected: …
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs / JSON envelope
+      description: |
+        If a command failed, re-run with `--json` and paste the envelope.
+        Sensitive paths/tokens fine to redact.
+      render: json
+    validations:
+      required: false
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else?
+      placeholder: "Workarounds you tried, related issues, suspected root cause, etc."
+    validations:
+      required: false

@@ -1,114 +1,116 @@
-# Samuel v2 (in development)
+# Samuel
 
-The rebuild. Clean break from v1.
+Rails for AI coding assistants. A small Go CLI that ships a framework, a plugin loader, and an opinionated methodology — everything tool-specific lives in plugins.
 
-> Status: **Milestone 1 (Foundation) implemented.** Module scaffold, structured errors, flock-based lock, TOON encoder/decoder, samuel.toml/samuel.lock, plugin interface stubs, Cobra CLI with `samuel version` (+ `--json`), Charm UI base, AGENTS.md template, build/release infra (Makefile, goreleaser with cosign signing, GitHub Actions, install.sh). Ready to tag `v2.0.0-alpha.1`.
+[![CI](https://github.com/samuelpkg/samuel/actions/workflows/ci.yml/badge.svg)](https://github.com/samuelpkg/samuel/actions/workflows/ci.yml)
+[![Release](https://github.com/samuelpkg/samuel/actions/workflows/release.yml/badge.svg)](https://github.com/samuelpkg/samuel/actions/workflows/release.yml)
+[![Docs](https://github.com/samuelpkg/samuel/actions/workflows/docs.yml/badge.svg)](https://samuelpkg.github.io/samuel/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-## What v2 is
+## What it is
 
-Samuel v2 is the **Rails for AI coding assistants** — a Go CLI that ships a thin framework + plugin loader + opinionated methodology, with everything tool-specific living in plugins.
+- **Agent-agnostic.** `AGENTS.md` is the canonical project context. `CLAUDE.md`, `.cursor/rules/`, `.codex/*` are produced by translator plugins — the framework knows about none of them.
+- **Plugin-driven.** Three tiers: **skill** (text + scripts), **WASM** (sandboxed via wazero), **OCI** (containers for heavy tools). Every plugin signed by Sigstore keyless OIDC.
+- **Methodology built in.** The 4D loop (Deconstruct / Diagnose / Develop / Deliver) with Ralph-Wiggum-style iteration cap as the default. Methodology plugins add hooks; the framework runs the loop.
+- **TOON-encoded runtime.** State files (`.samuel/run/*.toon`) are token-efficient for LLM context. Markdown stays for prose-heavy logs.
+- **CLI-mutation pattern.** The agent never edits state directly — it runs `samuel run done <id>` or `samuel run skip <id>`. The CLI owns the schema; the agent owns the decisions.
 
-Key changes from v1:
+Full design rationale: read [RFDs 0001–0008](https://samuelpkg.github.io/samuel/rfd/).
 
-- **Agent-agnostic by design** — AGENTS.md is canonical; CLAUDE.md / Cursor rules / Codex files come from translator plugins
-- **Three-tier plugin model** — skills (text), WASM (sandboxed, no host deps via wazero), OCI (Docker/Podman for heavy tools)
-- **Methodology hooks** — auto-mode keeps the Ralph Wiggum loop but adds plugin extension points
-- **TOON-encoded runtime** — token-efficient file format for `.samuel/run/` (with markdown for prose-heavy logs)
-- **Agent uses CLI for state mutations** — `samuel run done <id>` instead of direct prd.toon edits
-- **Dropped from v1**: gstack composition, gbrain MCP registration, language/framework/workflow as separate enums (now all plugins)
+## Install
 
-## Planning artifacts
-
-### PRDs (this milestone)
-
-Six PRDs at `.samuel/tasks/`, one per milestone:
-
-1. [PRD 0001 — Foundation](.samuel/tasks/0001-prd-foundation.md) — scaffold, TOON encoder, ported errors+lock, CI
-2. [PRD 0002 — Core](.samuel/tasks/0002-prd-core.md) — component lifecycle, orchestrator, sync, `init` + `doctor`
-3. [PRD 0003 — Plugin Loader](.samuel/tasks/0003-prd-plugin-loader.md) — three tiers, registry, `install` / `ls` / `search`
-4. [PRD 0004 — Methodology](.samuel/tasks/0004-prd-methodology.md) — Ralph + hooks + TOON runtime + multi-agent
-5. [PRD 0005 — Skill Migration](.samuel/tasks/0005-prd-skill-migration.md) — 78 plugins, registry, starter, translators
-6. [PRD 0006 — Polish + Launch](.samuel/tasks/0006-prd-polish-launch.md) — Charm UI, RFDs, docs, v2.0.0 ship
-
-Estimated total effort: **13–18 weeks** single-developer, less if bootstrapping with v1's autonomous mode.
-
-### RFDs (to write next)
-
-Eight inaugural RFDs land at `docs/rfd/0001-0008.md` during Milestone 6. Suggested write order (foundational first):
-
-1. RFD 0005 — Component lifecycle (foundation; write first)
-2. RFD 0001 — Three-tier plugin architecture
-3. RFD 0003 — SemVer + capability model + Sigstore
-4. RFD 0008 — Drop gstack and gbrain
-5. RFD 0007 — Plugin migration plan
-6. RFD 0002 — AGENTS.md primary
-7. RFD 0004 — Methodology hooks
-8. RFD 0006 — `samuel run [methodology]` rename
-
-### Design wiki
-
-`.wiki/` symlinks to the external design exploration (`../wiki/`). Browse `.wiki/index.md` for the full conceptual map. The wiki has 35+ pages covering every design decision the PRDs reference.
-
-The wiki is **not committed to v2's repo** — it's exploratory thinking outside the formal artifact line. The RFDs (in `docs/rfd/`) become the public, queryable record once written.
-
-## Source code
-
-Foundation milestone lives on `main`. Build with:
+**Homebrew (macOS/Linux):**
 
 ```bash
-make build
-./bin/samuel version
-./bin/samuel version --json   # v4 JSON envelope
-make test                     # race + cover across all packages
+brew update
+brew install ar4mirez/tap/samuel
 ```
 
-Layout follows standard Go convention:
+**curl install script:**
+
+```bash
+curl -sSL https://raw.githubusercontent.com/samuelpkg/samuel/main/install.sh | sh
+```
+
+**go install:**
+
+```bash
+go install github.com/samuelpkg/samuel/cmd/samuel@latest
+```
+
+Verify:
+
+```bash
+samuel version
+samuel doctor
+```
+
+> Every release artifact is signed by Sigstore keyless OIDC. See the cosign verification snippet in any release's notes.
+
+## 60-second tour
+
+```bash
+samuel init my-project
+cd my-project
+
+# AGENTS.md is now in the working tree — that's your canonical context.
+# Add a plugin:
+samuel install go-guide
+
+# (Optional) keep CLAUDE.md generated for tools that read it:
+samuel install samuel-claude-translator
+
+# Start the autonomous loop:
+samuel run start
+```
+
+The autonomous loop is iteration-capped (Ralph Wiggum methodology) and emits hooks at every boundary. Plugins attach to the hooks; the framework drives the loop. Full walkthrough in [Quick Start](https://samuelpkg.github.io/samuel/getting-started/quick-start/).
+
+## Documentation
+
+- **Site**: [samuelpkg.github.io/samuel](https://samuelpkg.github.io/samuel/)
+- **Getting started**: [Installation](https://samuelpkg.github.io/samuel/getting-started/installation/), [Quick start](https://samuelpkg.github.io/samuel/getting-started/quick-start/), [Your first task](https://samuelpkg.github.io/samuel/getting-started/first-task/), [Migrating from v1](https://samuelpkg.github.io/samuel/getting-started/migration-v1/)
+- **Concepts**: [overview](https://samuelpkg.github.io/samuel/core/overview/), [plugin format](https://samuelpkg.github.io/samuel/concepts/plugin-format/), [AGENTS.md primary](https://samuelpkg.github.io/samuel/concepts/agents-md-primary/), [methodology hooks](https://samuelpkg.github.io/samuel/concepts/methodology-hooks/)
+- **Plugin authoring**: [manifest](https://samuelpkg.github.io/samuel/plugin-authors/manifest/), [hooks](https://samuelpkg.github.io/samuel/plugin-authors/hooks/), [capabilities](https://samuelpkg.github.io/samuel/plugin-authors/capabilities/), [TinyGo + WASM](https://samuelpkg.github.io/samuel/plugin-authors/tinygo-wasm/), [OCI + gRPC](https://samuelpkg.github.io/samuel/plugin-authors/oci-grpc/), [signing](https://samuelpkg.github.io/samuel/plugin-authors/signing/)
+- **Reference**: [CLI](https://samuelpkg.github.io/samuel/reference/cli/), [FAQ](https://samuelpkg.github.io/samuel/reference/faq/), [cross-tool generation](https://samuelpkg.github.io/samuel/reference/cross-tool/)
+- **RFDs (design record)**: [index](https://samuelpkg.github.io/samuel/rfd/)
+
+## For v1 users
+
+v2 is a clean break. The binary name is the same; installing v2 overwrites v1. The v1 source lives at the [`v1-final`](https://github.com/samuelpkg/samuel/tree/v1-final) tag.
+
+If you used `CLAUDE.md` directly, install the [Claude translator plugin](https://github.com/samuelpkg/samuel-claude-translator) — it mirrors `AGENTS.md → CLAUDE.md` on every `samuel sync`. If you used `gstack` or `gbrain`, see [RFD 0008](https://samuelpkg.github.io/samuel/rfd/0008/) for the rationale and migration path.
+
+Full notice: [Migrating from v1](https://samuelpkg.github.io/samuel/getting-started/migration-v1/).
+
+## Repo layout
 
 ```text
 samuel_v2/
-├── cmd/samuel/main.go          # CLI entry (~18 lines, ported from v1)
-├── internal/                   # private packages
-│   ├── encoding/toon/          # TOON encoder/decoder (new)
-│   ├── errors/                 # structured errors (ported from v1)
-│   ├── lock/                   # flock(2) advisory lock (ported from v1)
-│   ├── config/                 # samuel.toml read/write
-│   ├── plugin/                 # Plugin interface + manifest parser + three tiers
-│   ├── orchestrator/           # lifecycle + rollback (ported from v1)
-│   ├── methodology/ralph/      # auto-mode (ported + hook-ified)
-│   ├── agents/                 # built-in agent adapters
-│   ├── sync/                   # per-folder AGENTS.md generator
-│   ├── commands/               # cobra commands
-│   ├── ui/                     # Charm UI (lipgloss/huh/bubbles)
-│   ├── builtins/               # embedded built-in skills (ralph, create-skill, sync)
-│   └── github/                 # HTTP wrapper (ported + extended for plugin fetch)
-├── template/
-│   └── AGENTS.md.tmpl          # ≤150 lines, CI-enforced
-├── docs/                       # mkdocs site
-│   ├── rfd/                    # 8 inaugural RFDs
-│   ├── concepts/               # design concepts (ports of wiki concepts)
-│   ├── core/, getting-started/, reference/, plugins/, plugin-authors/
+├── cmd/samuel/             # CLI entry point
+├── internal/
+│   ├── commands/           # cobra commands (init, install, run, sync, doctor, plugin, version)
+│   ├── methodology/        # built-in methodologies (ralph)
+│   ├── orchestrator/       # component lifecycle + rollback
+│   ├── plugin/             # three tiers + manifest + capability + verify + registry
+│   ├── sync/               # AGENTS.md generator
+│   ├── ui/                 # Charm UI (lipgloss + huh + bubbles)
 │   └── ...
-├── go.mod
-├── Makefile, .goreleaser.yaml, install.sh
-└── .github/workflows/          # CI + release + agnostic-check + agents-md-check
+├── template/AGENTS.md.tmpl # canonical template (≤150 lines, CI-enforced)
+├── docs/                   # mkdocs site (deployed to samuelpkg.github.io/samuel/)
+├── scripts/                # release-checklist, docs/RFD generators, v1 deprecation
+├── .goreleaser.yaml        # signed builds + brew tap + cosign bundle
+└── rfd-index.toml          # RFD source of truth
 ```
 
-## Wiki at a glance (the design rationale)
+## Contributing
 
-If you're opening this folder in Claude Code and want context fast:
+See [CONTRIBUTING.md](CONTRIBUTING.md). Bug? [Open one](https://github.com/samuelpkg/samuel/issues/new?template=bug_report.yml). Idea? [Discussions](https://github.com/samuelpkg/samuel/discussions). Vulnerability? [Private advisory](https://github.com/samuelpkg/samuel/security/advisories/new) — never a public issue.
 
-- **Positioning**: [[.wiki/synthesis/positioning-rails-for-coding-assistants]]
-- **Plugin model**: [[.wiki/concepts/plugin-format]]
-- **Cross-tool invariant**: [[.wiki/concepts/agnostic-by-design]]
-- **Why TOON**: [[.wiki/concepts/toon-evaluation]]
-- **Auto-mode design**: [[.wiki/synthesis/auto-mode-v2-design]]
-- **Plugin loader basis**: [[.wiki/synthesis/orchestrator-as-plugin-loader]]
-- **Migration plan**: [[.wiki/synthesis/v2-skill-migration-plan]]
+## Changelog + RFDs
 
-## Changelog
-
-See [CHANGELOG.md](CHANGELOG.md) for the per-milestone release notes
-and the v2.0.0 entry.
+- [CHANGELOG.md](CHANGELOG.md) — per-version release notes (Keep-a-Changelog format).
+- [docs/rfd/](docs/rfd/) — design record (RFDs 0001–0008 inaugural).
 
 ## License
 
