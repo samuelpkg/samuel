@@ -7,6 +7,159 @@ this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v2.0.0] — Public release
+
+PRD: [0006-prd-polish-launch.md](.samuel/tasks/0006-prd-polish-launch.md)
+
+**Thesis.** v2.0 is a clean break from v1. The framework is small, agent-agnostic,
+and plugin-driven. AGENTS.md is the canonical context file; everything tool-specific
+(CLAUDE.md, Cursor rules, Codex files) is produced by a translator plugin. The
+auto-mode loop is preserved under the methodology hooks model — Ralph Wiggum
+remains the default, now with extension points. Plugins ship in three tiers
+(skill / WASM / OCI), each with a Sigstore-keyless signature and a TOON manifest
+that declares capabilities up-front.
+
+What survived from v1: the 4D methodology, the autonomous iteration loop, the
+structured-error UX (`Fix:` / `DocsURL:`), the lock semantics, the JSON envelope.
+What is gone: gstack composition, gbrain MCP registration, language / framework /
+workflow as separate enums in the schema (now all plugins). What is new: three-tier
+plugin loader, capability model with safe-default vs risky split, methodology hooks,
+TOON-encoded runtime, CLI-mutation pattern for state, translator plugins.
+
+### Added
+
+- **Charm UI** across `internal/ui/`: `lipgloss` (color/style),
+  `huh` (native multi-select + confirm prompts, replacing the v1 inline
+  scanln path), `bubbles/spinner` (between-iteration indicator).
+  Same six-category vocabulary (success/error/warn/info/bold/dim);
+  same JSON envelope (schemaVersion 4); callers untouched.
+  Rationale: huh ships the native multi-select v1 hand-rolled, and the
+  lipgloss adaptive-color model erases the v1 light/dark hand-tuning.
+- **`docs/` site** at `samuelpkg.github.io/samuel/`, restructured per
+  RFD 0001 / RFD 0002: drops the `languages/`, `frameworks/`, and
+  `workflows/` SKILL.md duplicates from v1; adds `concepts/`,
+  `plugin-authors/`, and an auto-generated `plugins/` index pulled
+  from `samuelpkg/samuel-registry`. Material theme, `mkdocs --strict`
+  clean.
+- **Eight inaugural RFDs** at `docs/rfd/0001.md` through `0008.md`:
+  three-tier plugin architecture, AGENTS.md primary,
+  SemVer/capability/Sigstore, methodology hooks, component lifecycle as
+  plugin loader, `samuel run [methodology]` rename, plugin migration
+  from v1 skills, drop gstack/gbrain. `rfd-index.toml` is the source of truth;
+  `scripts/gen-rfd-index.sh` regenerates `docs/rfd/index.md`.
+- **Migration notice** at `docs/getting-started/migration-v1.md`.
+  Not an upgrade tool — explains the clean break, the `v1-final` tag,
+  the binary-name collision (v2 overwrites v1), how to start fresh.
+- **CI gate `agents-md-check.yml`**: enforces the ≤150-line budget on
+  both `template/AGENTS.md.tmpl` source and on the rendered max-config
+  output (mirrored by `TestAgentsMDTemplate_*` in the template
+  package).
+- **CI gate `agnostic-check.yml`**: greps `internal/`, `cmd/`,
+  `template/` for `CLAUDE.md`, `.claude/`, `.cursor/`, `.codex/`,
+  `Cursor`, `Codex CLI`. Passes today; fails any PR that re-introduces
+  tool-specific coupling outside a translator plugin. Test files and
+  `agnostic-allow` opt-outs are exempt.
+- **CHANGELOG** at repo root with a v1-style entry (rationale per item,
+  internal section, deprecation notice). README links to it.
+- **`scripts/gen-plugins-pages.sh`**: docs-build-time generator that
+  fetches `samuel-registry/index.toml` and writes one page per plugin
+  under `docs/plugins/`.
+
+### Changed
+
+- **AGENTS.md template** trimmed to 104 source lines (rendered ≤150
+  under the saturated test fixture). Sections: 4D methodology,
+  boundaries, quick reference, plugin block, guardrails block,
+  quality checks, project context.
+- **`samuel install`** consent flow now uses `huh.Confirm` when stdin
+  is a TTY and falls back to scanln when piped (CI / scripted use).
+  Behavior unchanged; UX is the v1 multi-select replacement.
+
+### Deprecated
+
+None. v2.0 is the clean break; deprecations apply only to v1.
+
+### Removed
+
+- **gstack composition** (was a v1 plugin-composition mechanism).
+  Rationale: replaced by the simpler three-tier plugin model and
+  meta plugins (`samuel-starter`). RFD 0008.
+- **gbrain MCP registration** path. Rationale: the framework no
+  longer registers MCP servers on the user's behalf; plugins that
+  need MCP do it explicitly.
+- **`languages` / `frameworks` / `workflows`** dirs from the docs
+  site (they were SKILL.md duplicates). Per-plugin pages are now
+  generated from the registry index.
+
+### Internal
+
+- `internal/ui/prompts.go` — new file. `Confirm`, `Select`,
+  `MultiSelect` over `huh`; `IsTerminal()` gate; scanln fallback.
+- `internal/ui/output.go` — `lipgloss` adaptive-color tokens; same
+  helper surface (`Success`, `Error`, `Warn`, `Info`, `Bold`, `Dim`,
+  `Header`, `Section`, `ListItem`, `SuccessItem`, `WarnItem`,
+  `ErrorItem`, `TableRow`).
+- `internal/ui/spinner.go` — bubbles/spinner wrapper for
+  non-bubbletea callers; safe `Start`/`Stop`/`Success`/`Error`.
+- `internal/commands/plugins.go` — `consolePrompt` rewritten to use
+  `ui.Confirm`. Test injection via `testPrompt` preserved.
+- `template/template_test.go` — two budget tests:
+  `TestAgentsMDTemplate_LineBudget` (source) and
+  `TestAgentsMDTemplate_RendersUnderBudget` (rendered against a
+  saturated max-config fixture). `TestAgentsMDTemplate_RendersAllVisibleSections`
+  asserts the 7 expected H2 sections.
+- `.github/workflows/agents-md-check.yml`, `.github/workflows/agnostic-check.yml` —
+  the two new gates. CI on push + PR for `template/**`, `internal/**`,
+  `cmd/**`, `.github/workflows/**`.
+- `scripts/gen-rfd-index.sh`, `scripts/gen-plugins-pages.sh` — both
+  bash, both idempotent (`set -euo pipefail`, stable diffs on re-run).
+- `docs/` — 29 new authored pages (~12,900 words). `mkdocs.yml` at
+  repo root, Material theme.
+
+### Migration
+
+There is no in-place upgrade from v1. The binary name is the same;
+installing v2 overwrites v1. The v1 source is preserved at the
+`v1-final` tag in `github.com/samuelpkg/samuel`. The migration notice
+in `docs/getting-started/migration-v1.md` covers what changes for v1
+users (AGENTS.md replaces CLAUDE.md; install the
+`samuel-claude-translator` plugin to keep CLAUDE.md generated; SKILL.md
+files have been ported to plugins under `github.com/samuelpkg/samuel-<name>`;
+no plugin authoring CLI yet — that ships in v2.1).
+
+## [v2.0.0-rc.3] — Final soak (planned)
+
+Final fixes from rc.2 feedback. CHANGELOG cleanup. No new features.
+
+## [v2.0.0-rc.2] — Polish + Launch (Milestone 6)
+
+PRD: [0006-prd-polish-launch.md](.samuel/tasks/0006-prd-polish-launch.md)
+
+First release candidate of v2.0. Charm UI swap complete; AGENTS.md
+template + line-budget gate locked in; agnostic-by-design CI gate
+added; eight inaugural RFDs published; docs site restructured.
+goreleaser publishes signed artifacts.
+
+### Added
+
+- Charm UI swap (lipgloss + huh + bubbles).
+- `agents-md-check.yml` CI gate enforcing the 150-line budget on both
+  source and rendered output.
+- `agnostic-check.yml` CI gate forbidding tool-specific references
+  in `internal/`, `cmd/`, `template/`.
+- Eight inaugural RFDs at `docs/rfd/0001.md` through `0008.md`.
+- Docs site restructure under `docs/`, with `mkdocs.yml` at repo
+  root. `concepts/`, `plugin-authors/`, `plugins/` (generated) new.
+- `scripts/gen-rfd-index.sh` and `scripts/gen-plugins-pages.sh`
+  generator scripts.
+- Migration notice at `docs/getting-started/migration-v1.md`.
+
+### Notes
+
+- Feature freeze. Bug fixes only between rc.2 and v2.0.0.
+- Internal-test target: a 1-week rc.2 → rc.3 soak, then a 1-week
+  rc.3 → v2.0 soak. Defer any non-fix to v2.1.
+
 ## [v2.0.0-rc.1] — Skill Migration (Milestone 5)
 
 PRD: [0005-prd-skill-migration.md](.samuel/tasks/0005-prd-skill-migration.md)

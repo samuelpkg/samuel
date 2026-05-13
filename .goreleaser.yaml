@@ -23,9 +23,9 @@ builds:
       - arm64
     ldflags:
       - -s -w
-      - -X github.com/ar4mirez/samuel/internal/commands.Version={{.Version}}
-      - -X github.com/ar4mirez/samuel/internal/commands.Commit={{.Commit}}
-      - -X github.com/ar4mirez/samuel/internal/commands.BuildDate={{.Date}}
+      - -X github.com/samuelpkg/samuel/internal/commands.Version={{.Version}}
+      - -X github.com/samuelpkg/samuel/internal/commands.Commit={{.Commit}}
+      - -X github.com/samuelpkg/samuel/internal/commands.BuildDate={{.Date}}
 
 archives:
   - id: default
@@ -48,7 +48,7 @@ checksum:
 # the signature + cert are uploaded next to each artifact. Verification:
 #
 #   cosign verify-blob \
-#     --certificate-identity-regexp 'https://github.com/ar4mirez/samuel/.*' \
+#     --certificate-identity-regexp 'https://github.com/samuelpkg/samuel/.*' \
 #     --certificate-oidc-issuer https://token.actions.githubusercontent.com \
 #     --bundle samuel_v2.0.0_linux_amd64.tar.gz.cosign.bundle \
 #     samuel_v2.0.0_linux_amd64.tar.gz
@@ -95,7 +95,7 @@ changelog:
 
 release:
   github:
-    owner: ar4mirez
+    owner: samuelpkg
     name: samuel
   draft: false
   prerelease: auto
@@ -123,7 +123,7 @@ release:
 
     **macOS/Linux (curl)**:
     ```bash
-    curl -sSL https://raw.githubusercontent.com/ar4mirez/samuel/main/install.sh | sh
+    curl -sSL https://raw.githubusercontent.com/samuelpkg/samuel/main/install.sh | sh
     ```
 
     Cosign-signed bundles ship next to each archive. See `cosign verify-blob` instructions in the assets.
@@ -132,26 +132,26 @@ release:
 
     ---
 
-    **Full Changelog**: https://github.com/ar4mirez/samuel/compare/{{ .PreviousTag }}...{{ .Tag }}
+    **Full Changelog**: https://github.com/samuelpkg/samuel/compare/{{ .PreviousTag }}...{{ .Tag }}
 
-# Homebrew tap publication is intentionally disabled during the v2
-# alpha line. The ar4mirez/homebrew-tap currently ships the v1 (3.x)
-# `samuel` formula; pointing it at a v2 alpha would silently upgrade
-# every `brew install samuel` user to a pre-release build. Re-enable
-# this block at v2.0.0 GA — the config is preserved verbatim below.
-#
-# brews:
-#   - name: samuel
-#     repository:
-#       owner: ar4mirez
-#       name: homebrew-tap
-#       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
-#     directory: Formula
-#     homepage: "https://github.com/ar4mirez/samuel"
-#     description: "Rails for AI coding assistants"
-#     license: "MIT"
-#     install: |
-#       bin.install "samuel"
-#       generate_completions_from_executable(bin/"samuel", "completion")
-#     test: |
-#       system "#{bin}/samuel", "version"
+# Homebrew tap publication. The framework lives under samuelpkg, but
+# the tap stays at ar4mirez/homebrew-tap (the v1 tap) so every existing
+# `brew install samuel` user transparently upgrades to v2 on the next
+# `brew update`. The v1 deprecation messaging at RELEASE-DAY.md covers
+# the implications. Requires HOMEBREW_TAP_GITHUB_TOKEN — a fine-grained
+# PAT scoped to ar4mirez/homebrew-tap with Contents: read/write.
+brews:
+  - name: samuel
+    repository:
+      owner: ar4mirez
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    directory: Formula
+    homepage: "https://samuelpkg.github.io/samuel/"
+    description: "Rails for AI coding assistants"
+    license: "MIT"
+    install: |
+      bin.install "samuel"
+      generate_completions_from_executable(bin/"samuel", "completion")
+    test: |
+      system "#{bin}/samuel", "version"

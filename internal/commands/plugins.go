@@ -106,26 +106,29 @@ func buildService(projectDir string) (*service.Service, error) {
 	}, nil
 }
 
-// consolePrompt is the human-facing capability-grant flow. v2.0 ships
-// the inline confirmation; v2.1 swaps in a huh form (which requires a
-// non-trivial dep we'd rather not pull in for beta.1).
+// consolePrompt is the human-facing capability-grant flow. Uses huh
+// when stdin is a TTY for the native confirm UX (PRD 0006 §1) and
+// falls back to inline scanln for piped / CI invocations.
 func consolePrompt(plugin string, reqs []capability.Requested) capability.PromptDecision {
 	ui.Warn("Plugin %q requests these capabilities:", plugin)
+	desc := make([]string, 0, len(reqs))
 	for _, r := range reqs {
 		marker := "•"
 		if r.Risky() {
 			marker = "⚠"
 		}
 		ui.ListItem(1, "%s %s", marker, r.Summary())
+		desc = append(desc, marker+" "+r.Summary())
 	}
-	fmt.Print("Grant all? [y/N] ")
-	var ans string
-	_, _ = fmt.Scanln(&ans)
-	ans = strings.TrimSpace(strings.ToLower(ans))
-	if ans == "y" || ans == "yes" {
-		return capability.PromptDecision{Granted: true, Reason: "user-prompt"}
+	granted, err := ui.Confirm(
+		fmt.Sprintf("Grant capabilities for %q?", plugin),
+		strings.Join(desc, "\n"),
+		false,
+	)
+	if err != nil || !granted {
+		return capability.PromptDecision{Granted: false, Reason: "user-declined"}
 	}
-	return capability.PromptDecision{Granted: false, Reason: "user-declined"}
+	return capability.PromptDecision{Granted: true, Reason: "user-prompt"}
 }
 
 func runInstall(cmd *cobra.Command, args []string) error {

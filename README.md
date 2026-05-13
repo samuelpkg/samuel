@@ -105,6 +105,11 @@ If you're opening this folder in Claude Code and want context fast:
 - **Plugin loader basis**: [[.wiki/synthesis/orchestrator-as-plugin-loader]]
 - **Migration plan**: [[.wiki/synthesis/v2-skill-migration-plan]]
 
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for the per-milestone release notes
+and the v2.0.0 entry.
+
 ## License
 
-MIT (to be added).
+MIT — see [LICENSE](LICENSE).

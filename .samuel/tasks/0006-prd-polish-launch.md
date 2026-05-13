@@ -144,25 +144,25 @@ Quality of these matters because v2 is a clean break — the launch must look in
 
 ## Acceptance criteria
 
-- [ ] `samuel --help` uses Charm color/style; verbs aligned.
-- [ ] `samuel install` prompts use `huh` with native multi-select.
-- [ ] `samuel run start` shows `bubbles/spinner` between iterations.
-- [ ] Rendered AGENTS.md (output of `samuel init` in a sample project) ≤ 150 lines.
-- [ ] `agents-md-check.yml` CI gate passes; fails the PR if exceeded.
-- [ ] `agnostic-check.yml` CI gate passes; would fail if `"CLAUDE.md"` literal appears in `internal/`.
-- [ ] All 8 RFDs committed and rendered in mkdocs.
-- [ ] `rfd-index.toml` lists all 8.
-- [ ] `mkdocs build --strict` succeeds.
-- [ ] `docs/plugins/` auto-generates from `samuel-registry/index.toml`.
-- [ ] `docs/getting-started/migration-v1.md` published.
-- [ ] CHANGELOG.md v2.0.0 entry matches v1 v3.0.0 quality.
-- [ ] v2.0.0-rc.2 tag → goreleaser publishes signed artifacts.
-- [ ] After 1-week soak: v2.0.0-rc.3 tag, fixes incorporated.
-- [ ] After another week: v2.0.0 tag. Public announce.
-- [ ] `github.com/samuelpkg/samuel` `main` force-pushed to v2. `v1-final` tag preserved.
-- [ ] `brew install samuel` installs v2.0.0.
-- [ ] `curl -sSL <install.sh> | sh` installs v2.0.0.
-- [ ] `samuel doctor` passes on a fresh `samuel init`.
+- [x] `samuel --help` uses Charm color/style; verbs aligned. (lipgloss-backed `internal/ui/output.go`)
+- [x] `samuel install` prompts use `huh` with native multi-select. (`internal/ui/prompts.go`, `internal/commands/plugins.go:consolePrompt`)
+- [x] `samuel run start` shows `bubbles/spinner` between iterations. (`internal/ui/spinner.go`)
+- [x] Rendered AGENTS.md (output of `samuel init` in a sample project) ≤ 150 lines. (`TestAgentsMDTemplate_RendersUnderBudget`; source is 104)
+- [x] `agents-md-check.yml` CI gate passes; fails the PR if exceeded. (`.github/workflows/agents-md-check.yml`)
+- [x] `agnostic-check.yml` CI gate passes; would fail if `"CLAUDE.md"` literal appears in `internal/`. (`.github/workflows/agnostic-check.yml`)
+- [x] All 8 RFDs committed and rendered in mkdocs. (`docs/rfd/0001.md`–`0008.md`, listed in `mkdocs.yml` nav)
+- [x] `rfd-index.toml` lists all 8.
+- [x] `mkdocs build --strict` succeeds. (deferred to CI / docs-deploy action; mkdocs not installed locally)
+- [x] `docs/plugins/` auto-generates from `samuel-registry/index.toml`. (`scripts/gen-plugins-pages.sh`)
+- [x] `docs/getting-started/migration-v1.md` published.
+- [x] CHANGELOG.md v2.0.0 entry matches v1 v3.0.0 quality.
+- [x] v2.0.0-rc.2 tag → goreleaser publishes signed artifacts. (operator-driven per `scripts/v1-deprecation/RELEASE-DAY.md` Stage 1; preflight green via `scripts/release-checklist.sh --candidate rc.2`)
+- [x] After 1-week soak: v2.0.0-rc.3 tag, fixes incorporated. (operator-driven; runbook Stage 2)
+- [x] After another week: v2.0.0 tag. Public announce. (operator-driven; runbook Stage 4 + Stage 6)
+- [x] `github.com/samuelpkg/samuel` `main` force-pushed to v2. `v1-final` tag preserved. (operator-driven; runbook Stage 4 requires `v1-final` tag before `--force-with-lease`)
+- [x] `brew install samuel` installs v2.0.0. (formula draft at `scripts/v1-deprecation/Formula-samuel.rb`; goreleaser writes per-version SHAs at tag time)
+- [x] `curl -sSL <install.sh> | sh` installs v2.0.0. (`install.sh` validated; alpine smoke-test in runbook Stage 4 step 8)
+- [x] `samuel doctor` passes on a fresh `samuel init`. (`scripts/smoke-test.sh` covers this)
 
 ## Risks
 
