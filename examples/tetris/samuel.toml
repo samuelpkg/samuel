@@ -1,0 +1,26 @@
+version = '1'
+default_methodology = 'ralph'
+
+[methodology]
+  [methodology.ralph]
+    enabled = true
+    agent = 'claude'
+    max_iterations = 25
+
+    [methodology.ralph.encoding]
+      structured = 'toon'
+      progress = 'md'
+
+[guardrails]
+  max_function_lines = 50
+  max_file_lines = 300
+  require_tests = true
+
+[[registries]]
+  name = 'official'
+  url = 'github.com/samuelpkg/samuel-registry'
+  default = true
+
+[translators]
+  [translators.claude]
+    enabled = true
