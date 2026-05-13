@@ -7,9 +7,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/ar4mirez/samuel/internal/config"
-	"github.com/ar4mirez/samuel/internal/sync"
-	"github.com/ar4mirez/samuel/internal/ui"
+	"github.com/samuelpkg/samuel/internal/config"
+	"github.com/samuelpkg/samuel/internal/sync"
+	"github.com/samuelpkg/samuel/internal/ui"
 )
 
 var syncCmd = &cobra.Command{

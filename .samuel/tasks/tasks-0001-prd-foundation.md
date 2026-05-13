@@ -26,7 +26,7 @@
   - [x] 2.1 Copy `samuel_v1/internal/orchestrator/errors.go` to `internal/errors/errors.go`; update package name to `errors`
   - [x] 2.2 Keep all six fields: `Component`, `Problem`, `Cause`, `Fix`, `DocsURL`, `Recoverable`, `Path`
   - [x] 2.3 Keep `Wrap(err)` and `IsRecoverable(err)` helpers
-  - [x] 2.4 Update `DocsURL` examples from `samuel.dev` to `ar4mirez.github.io/samuel/docs/errors/`
+  - [x] 2.4 Update `DocsURL` examples from `samuel.dev` to `samuelpkg.github.io/samuel/docs/errors/`
   - [x] 2.5 Write `errors_test.go` covering single-line render, multi-line render, errors.Is/As traversal, Recoverable flag
   - [x] 2.6 Inventory error codes in use; reserve numeric ranges per subsystem in a comment block
 

@@ -17,7 +17,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ar4mirez/samuel/internal/errors"
+	"github.com/samuelpkg/samuel/internal/errors"
 )
 
 // Component is the structured-error namespace.
@@ -65,7 +65,7 @@ func DetectRuntime() (DetectedRuntime, error) {
 		Component:   Component,
 		Problem:     "no container runtime found",
 		Fix:         "install podman or docker, or set SAMUEL_RUNTIME=<binary>",
-		DocsURL:     "https://ar4mirez.github.io/samuel/docs/errors/SAM-OCI-001",
+		DocsURL:     "https://samuelpkg.github.io/samuel/docs/errors/SAM-OCI-001",
 		Recoverable: true,
 	}
 }

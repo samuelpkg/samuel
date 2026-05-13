@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/ar4mirez/samuel/internal/config"
-	"github.com/ar4mirez/samuel/internal/plugin"
+	"github.com/samuelpkg/samuel/internal/config"
+	"github.com/samuelpkg/samuel/internal/plugin"
 )
 
 func TestReadLockfile_MissingReturnsEmpty(t *testing.T) {

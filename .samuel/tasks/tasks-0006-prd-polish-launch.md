@@ -97,7 +97,7 @@
   - [ ] 11.3 Force-push `github.com/samuelpkg/samuel` `main` to v2 code (after `v1-final` tag is in place)
   - [ ] 11.4 Update Homebrew tap formula; verify `brew install samuel` lands v2.0.0
   - [ ] 11.5 Verify `curl -sSL <install.sh> | sh` installs v2.0.0 on clean macOS + Linux containers
-  - [ ] 11.6 Trigger docs deploy to ar4mirez.github.io/samuel/
+  - [ ] 11.6 Trigger docs deploy to samuelpkg.github.io/samuel/
   - [ ] 11.7 Smoke test: `samuel init my-project` end-to-end in fresh container
 
 - [ ] 12.0 Announcement [~2,500 tokens - Medium]

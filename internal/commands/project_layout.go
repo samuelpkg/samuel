@@ -8,11 +8,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ar4mirez/samuel/internal/builtins"
-	"github.com/ar4mirez/samuel/internal/components/samuel"
-	"github.com/ar4mirez/samuel/internal/config"
-	"github.com/ar4mirez/samuel/internal/errors"
-	"github.com/ar4mirez/samuel/internal/sync"
+	"github.com/samuelpkg/samuel/internal/builtins"
+	"github.com/samuelpkg/samuel/internal/components/samuel"
+	"github.com/samuelpkg/samuel/internal/config"
+	"github.com/samuelpkg/samuel/internal/errors"
+	"github.com/samuelpkg/samuel/internal/sync"
 )
 
 // projectLayout writes the .samuel/ directory layout into projectDir:
@@ -227,14 +227,14 @@ func renderRootAgentsMD(projectName string, cfg *config.Config) string {
 //
 // Heuristic: look for paths only Samuel's own checkout has.
 func isSamuelRepository(dir string) bool {
-	// v2 lives at <repo>/go.mod with module = github.com/ar4mirez/samuel,
+	// v2 lives at <repo>/go.mod with module = github.com/samuelpkg/samuel,
 	// next to internal/builtins/content/ralph/SKILL.md.
 	goMod := filepath.Join(dir, "go.mod")
 	mod, err := os.ReadFile(goMod)
 	if err != nil {
 		return false
 	}
-	if !strings.Contains(string(mod), "module github.com/ar4mirez/samuel") {
+	if !strings.Contains(string(mod), "module github.com/samuelpkg/samuel") {
 		return false
 	}
 	canary := filepath.Join(dir, "internal", "builtins", "content", "ralph", "SKILL.md")

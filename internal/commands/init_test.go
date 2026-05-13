@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ar4mirez/samuel/internal/config"
-	"github.com/ar4mirez/samuel/internal/ui"
+	"github.com/samuelpkg/samuel/internal/config"
+	"github.com/samuelpkg/samuel/internal/ui"
 )
 
 // withHomeAndProject sets HOME and cwd to fresh tempdirs and returns the
@@ -166,7 +166,7 @@ func TestInit_RefusesInsideSamuelRepo(t *testing.T) {
 	project := t.TempDir()
 	t.Setenv("HOME", home)
 	// Seed the canary files that isSamuelRepository looks for.
-	if err := os.WriteFile(filepath.Join(project, "go.mod"), []byte("module github.com/ar4mirez/samuel\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(project, "go.mod"), []byte("module github.com/samuelpkg/samuel\n"), 0o644); err != nil {
 		t.Fatalf("seed go.mod: %v", err)
 	}
 	canaryDir := filepath.Join(project, "internal", "builtins", "content", "ralph")

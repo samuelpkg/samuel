@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ar4mirez/samuel/internal/commands"
+	"github.com/samuelpkg/samuel/internal/commands"
 )
 
 func main() {

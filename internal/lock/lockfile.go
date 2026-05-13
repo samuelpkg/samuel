@@ -4,9 +4,9 @@ import (
 	stderrors "errors"
 	"time"
 
-	"github.com/ar4mirez/samuel/internal/config"
-	"github.com/ar4mirez/samuel/internal/errors"
-	"github.com/ar4mirez/samuel/internal/plugin"
+	"github.com/samuelpkg/samuel/internal/config"
+	"github.com/samuelpkg/samuel/internal/errors"
+	"github.com/samuelpkg/samuel/internal/plugin"
 )
 
 // LockfileName is the on-disk name of the samuel.lock file.

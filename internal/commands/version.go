@@ -3,7 +3,7 @@ package commands
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/ar4mirez/samuel/internal/ui"
+	"github.com/samuelpkg/samuel/internal/ui"
 )
 
 // Build-time injected via -ldflags "-X .../commands.Version=..."

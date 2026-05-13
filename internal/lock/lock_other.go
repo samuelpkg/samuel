@@ -5,7 +5,7 @@ package lock
 import (
 	"runtime"
 
-	"github.com/ar4mirez/samuel/internal/errors"
+	"github.com/samuelpkg/samuel/internal/errors"
 )
 
 // acquireFileLock on non-Unix platforms returns an unsupported-platform
@@ -24,7 +24,7 @@ func acquireFileLock(home string) (release func(), err error) {
 		Problem:     "Samuel v2.0 does not support GOOS=" + runtime.GOOS,
 		Cause:       "the lock subsystem requires flock(2), unavailable on this platform",
 		Fix:         "run Samuel on macOS or Linux (Windows is on the v2.x roadmap)",
-		DocsURL:     "https://ar4mirez.github.io/samuel/docs/v2-roadmap#windows",
+		DocsURL:     "https://samuelpkg.github.io/samuel/docs/v2-roadmap#windows",
 		Recoverable: false,
 	}
 }

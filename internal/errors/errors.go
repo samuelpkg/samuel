@@ -13,7 +13,7 @@
 //	Error: cannot register MCP server
 //	  Cause: claude not on PATH
 //	  Fix:   install claude or add it to PATH
-//	  Docs:  https://ar4mirez.github.io/samuel/docs/errors/SAM-MCP-001
+//	  Docs:  https://samuelpkg.github.io/samuel/docs/errors/SAM-MCP-001
 //
 // Error() returns a single-line string suitable for logs and tests.
 //

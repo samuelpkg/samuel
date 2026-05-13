@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/ar4mirez/samuel/internal/encoding/toon"
-	"github.com/ar4mirez/samuel/internal/methodology/ralph/prd"
+	"github.com/samuelpkg/samuel/internal/encoding/toon"
+	"github.com/samuelpkg/samuel/internal/methodology/ralph/prd"
 )
 
 // GenerateTaskContext writes task-context.toon describing what the

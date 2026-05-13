@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ar4mirez/samuel/internal/methodology/ralph/prd"
+	"github.com/samuelpkg/samuel/internal/methodology/ralph/prd"
 )
 
 func setupRunDir(t *testing.T) string {

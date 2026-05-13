@@ -10,12 +10,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/ar4mirez/samuel/internal/agents"
-	"github.com/ar4mirez/samuel/internal/config"
-	"github.com/ar4mirez/samuel/internal/methodology/hooks"
-	"github.com/ar4mirez/samuel/internal/methodology/ralph"
-	"github.com/ar4mirez/samuel/internal/methodology/ralph/prd"
-	"github.com/ar4mirez/samuel/internal/ui"
+	"github.com/samuelpkg/samuel/internal/agents"
+	"github.com/samuelpkg/samuel/internal/config"
+	"github.com/samuelpkg/samuel/internal/methodology/hooks"
+	"github.com/samuelpkg/samuel/internal/methodology/ralph"
+	"github.com/samuelpkg/samuel/internal/methodology/ralph/prd"
+	"github.com/samuelpkg/samuel/internal/ui"
 )
 
 // methodologyAliases maps short methodology names to their canonical

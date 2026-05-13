@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ar4mirez/samuel/internal/agents"
-	"github.com/ar4mirez/samuel/internal/methodology/hooks"
-	"github.com/ar4mirez/samuel/internal/methodology/ralph/prd"
+	"github.com/samuelpkg/samuel/internal/agents"
+	"github.com/samuelpkg/samuel/internal/methodology/hooks"
+	"github.com/samuelpkg/samuel/internal/methodology/ralph/prd"
 )
 
 // fakePlugin is a minimal Hook handler that lets composition tests

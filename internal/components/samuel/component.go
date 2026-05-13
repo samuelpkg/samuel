@@ -29,8 +29,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ar4mirez/samuel/internal/errors"
-	"github.com/ar4mirez/samuel/internal/plugin"
+	"github.com/samuelpkg/samuel/internal/errors"
+	"github.com/samuelpkg/samuel/internal/plugin"
 )
 
 // Name is the stable identifier this component reports via Plugin.Name.

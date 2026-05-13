@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/ar4mirez/samuel/internal/methodology/ralph/prd"
+	"github.com/samuelpkg/samuel/internal/methodology/ralph/prd"
 )
 
 // NewPilotConfig returns the defaults that match v1.

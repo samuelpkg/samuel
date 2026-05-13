@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ar4mirez/samuel/internal/errors"
+	"github.com/samuelpkg/samuel/internal/errors"
 )
 
 // holdFlock takes an exclusive flock on the lock file at the given home

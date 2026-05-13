@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ar4mirez/samuel/internal/methodology/ralph/prd"
+	"github.com/samuelpkg/samuel/internal/methodology/ralph/prd"
 )
 
 // Progress context tuning — defaults match v1.

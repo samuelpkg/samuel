@@ -10,15 +10,15 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/ar4mirez/samuel/internal/config"
-	"github.com/ar4mirez/samuel/internal/errors"
-	"github.com/ar4mirez/samuel/internal/plugin"
-	"github.com/ar4mirez/samuel/internal/plugin/capability"
-	"github.com/ar4mirez/samuel/internal/plugin/oci"
-	"github.com/ar4mirez/samuel/internal/plugin/registry"
-	"github.com/ar4mirez/samuel/internal/plugin/service"
-	"github.com/ar4mirez/samuel/internal/plugin/verify"
-	"github.com/ar4mirez/samuel/internal/ui"
+	"github.com/samuelpkg/samuel/internal/config"
+	"github.com/samuelpkg/samuel/internal/errors"
+	"github.com/samuelpkg/samuel/internal/plugin"
+	"github.com/samuelpkg/samuel/internal/plugin/capability"
+	"github.com/samuelpkg/samuel/internal/plugin/oci"
+	"github.com/samuelpkg/samuel/internal/plugin/registry"
+	"github.com/samuelpkg/samuel/internal/plugin/service"
+	"github.com/samuelpkg/samuel/internal/plugin/verify"
+	"github.com/samuelpkg/samuel/internal/ui"
 )
 
 var (

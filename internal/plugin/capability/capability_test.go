@@ -3,7 +3,7 @@ package capability
 import (
 	"testing"
 
-	"github.com/ar4mirez/samuel/internal/plugin/manifest"
+	"github.com/samuelpkg/samuel/internal/plugin/manifest"
 )
 
 func TestFromManifest(t *testing.T) {

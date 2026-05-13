@@ -10,12 +10,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/ar4mirez/samuel/internal/config"
-	"github.com/ar4mirez/samuel/internal/errors"
-	"github.com/ar4mirez/samuel/internal/lock"
-	"github.com/ar4mirez/samuel/internal/plugin"
-	"github.com/ar4mirez/samuel/internal/sync"
-	"github.com/ar4mirez/samuel/internal/ui"
+	"github.com/samuelpkg/samuel/internal/config"
+	"github.com/samuelpkg/samuel/internal/errors"
+	"github.com/samuelpkg/samuel/internal/lock"
+	"github.com/samuelpkg/samuel/internal/plugin"
+	"github.com/samuelpkg/samuel/internal/sync"
+	"github.com/samuelpkg/samuel/internal/ui"
 )
 
 var initCmd = &cobra.Command{

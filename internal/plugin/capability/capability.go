@@ -29,7 +29,7 @@ import (
 
 	"github.com/bmatcuk/doublestar/v4"
 
-	"github.com/ar4mirez/samuel/internal/plugin/manifest"
+	"github.com/samuelpkg/samuel/internal/plugin/manifest"
 )
 
 // Kind enumerates capability families. The string value is what lands

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ar4mirez/samuel/internal/errors"
+	"github.com/samuelpkg/samuel/internal/errors"
 )
 
 func TestValidate_DefaultsPass(t *testing.T) {

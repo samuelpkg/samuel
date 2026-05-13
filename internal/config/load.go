@@ -8,7 +8,7 @@ import (
 
 	toml "github.com/pelletier/go-toml/v2"
 
-	"github.com/ar4mirez/samuel/internal/errors"
+	"github.com/samuelpkg/samuel/internal/errors"
 )
 
 // component is the namespace used in structured errors produced by
@@ -40,7 +40,7 @@ func Load(dir string) (*Config, error) {
 			Problem:     "cannot parse samuel.toml",
 			Cause:       err.Error(),
 			Fix:         "fix the TOML syntax (run `samuel doctor` for hints)",
-			DocsURL:     "https://ar4mirez.github.io/samuel/docs/errors/SAM-CFG-001",
+			DocsURL:     "https://samuelpkg.github.io/samuel/docs/errors/SAM-CFG-001",
 			Recoverable: true,
 			Path:        path,
 		}).Wrap(err)
@@ -78,7 +78,7 @@ func LoadLock(dir string) (*Lockfile, error) {
 			Problem:     "cannot parse samuel.lock",
 			Cause:       err.Error(),
 			Fix:         "regenerate with `samuel install --lock-only` (lockfile is machine-managed)",
-			DocsURL:     "https://ar4mirez.github.io/samuel/docs/errors/SAM-CFG-002",
+			DocsURL:     "https://samuelpkg.github.io/samuel/docs/errors/SAM-CFG-002",
 			Recoverable: true,
 			Path:        path,
 		}).Wrap(err)

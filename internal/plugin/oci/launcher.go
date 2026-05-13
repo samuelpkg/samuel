@@ -7,7 +7,7 @@ import (
 	"os/user"
 	"strings"
 
-	"github.com/ar4mirez/samuel/internal/plugin/capability"
+	"github.com/samuelpkg/samuel/internal/plugin/capability"
 )
 
 // LaunchOptions parameterizes a `<runtime> run` invocation. The

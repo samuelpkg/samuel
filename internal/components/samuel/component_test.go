@@ -7,7 +7,7 @@ import (
 	"testing"
 	"testing/fstest"
 
-	"github.com/ar4mirez/samuel/internal/plugin"
+	"github.com/samuelpkg/samuel/internal/plugin"
 )
 
 // fixtureFS returns a deterministic two-skill source tree used by tests

@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/ar4mirez/samuel/internal/plugin"
-	"github.com/ar4mirez/samuel/internal/plugin/manifest"
+	"github.com/samuelpkg/samuel/internal/plugin"
+	"github.com/samuelpkg/samuel/internal/plugin/manifest"
 )
 
 // makeFixtureSource writes a minimal skill plugin fixture into dir and

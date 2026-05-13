@@ -46,8 +46,8 @@ import (
 
 	"github.com/pelletier/go-toml/v2"
 
-	"github.com/ar4mirez/samuel/internal/errors"
-	"github.com/ar4mirez/samuel/internal/plugin/semver"
+	"github.com/samuelpkg/samuel/internal/errors"
+	"github.com/samuelpkg/samuel/internal/plugin/semver"
 )
 
 // Component is the structured-error namespace for this package.

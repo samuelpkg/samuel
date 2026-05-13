@@ -15,10 +15,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ar4mirez/samuel/internal/errors"
-	"github.com/ar4mirez/samuel/internal/plugin"
-	"github.com/ar4mirez/samuel/internal/plugin/manifest"
-	"github.com/ar4mirez/samuel/internal/plugin/source"
+	"github.com/samuelpkg/samuel/internal/errors"
+	"github.com/samuelpkg/samuel/internal/plugin"
+	"github.com/samuelpkg/samuel/internal/plugin/manifest"
+	"github.com/samuelpkg/samuel/internal/plugin/source"
 )
 
 // Component is the structured-error namespace.

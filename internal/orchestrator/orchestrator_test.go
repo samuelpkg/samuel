@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ar4mirez/samuel/internal/errors"
-	"github.com/ar4mirez/samuel/internal/lock"
-	"github.com/ar4mirez/samuel/internal/plugin"
+	"github.com/samuelpkg/samuel/internal/errors"
+	"github.com/samuelpkg/samuel/internal/lock"
+	"github.com/samuelpkg/samuel/internal/plugin"
 )
 
 // fakePlugin is the configurable plugin.Plugin implementation used by

@@ -38,7 +38,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ar4mirez/samuel/internal/errors"
+	"github.com/samuelpkg/samuel/internal/errors"
 )
 
 // Component is the structured-error namespace for this package.
@@ -129,7 +129,7 @@ func decideStub(req Request) (Result, error) {
 		Component:   Component,
 		Problem:     "signature required and stub verifier cannot verify it",
 		Fix:         "install with --allow-unsigned, or add the source to [security].identity_patterns / allow_unsigned_for",
-		DocsURL:     "https://ar4mirez.github.io/samuel/docs/errors/SAM-VERIFY-001",
+		DocsURL:     "https://samuelpkg.github.io/samuel/docs/errors/SAM-VERIFY-001",
 		Recoverable: true,
 	}
 }

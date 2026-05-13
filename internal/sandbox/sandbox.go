@@ -24,8 +24,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ar4mirez/samuel/internal/agents"
-	"github.com/ar4mirez/samuel/internal/plugin/oci"
+	"github.com/samuelpkg/samuel/internal/agents"
+	"github.com/samuelpkg/samuel/internal/plugin/oci"
 )
 
 // Mode names.

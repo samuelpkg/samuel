@@ -28,7 +28,7 @@ import (
 
 	"github.com/pelletier/go-toml/v2"
 
-	"github.com/ar4mirez/samuel/internal/errors"
+	"github.com/samuelpkg/samuel/internal/errors"
 )
 
 // FileName is the canonical on-disk filename for a plugin manifest.
@@ -156,7 +156,7 @@ func Load(path string) (*Manifest, error) {
 			Component:   Component,
 			Problem:     "cannot read manifest",
 			Path:        path,
-			DocsURL:     "https://ar4mirez.github.io/samuel/docs/errors/SAM-MANIFEST-001",
+			DocsURL:     "https://samuelpkg.github.io/samuel/docs/errors/SAM-MANIFEST-001",
 			Recoverable: true,
 		}).Wrap(err)
 	}
@@ -177,7 +177,7 @@ func Parse(data []byte, pathHint string) (*Manifest, error) {
 			Component:   Component,
 			Problem:     "manifest is not valid TOML",
 			Path:        pathHint,
-			DocsURL:     "https://ar4mirez.github.io/samuel/docs/errors/SAM-MANIFEST-001",
+			DocsURL:     "https://samuelpkg.github.io/samuel/docs/errors/SAM-MANIFEST-001",
 			Recoverable: true,
 		}).Wrap(err)
 	}
@@ -199,7 +199,7 @@ func (m *Manifest) Validate() error {
 			Component:   Component,
 			Problem:     "manifest missing required field 'name'",
 			Fix:         "add `name = \"<plugin-name>\"` at the top of samuel-plugin.toml",
-			DocsURL:     "https://ar4mirez.github.io/samuel/docs/errors/SAM-MANIFEST-001",
+			DocsURL:     "https://samuelpkg.github.io/samuel/docs/errors/SAM-MANIFEST-001",
 			Recoverable: true,
 		}
 	}
@@ -208,7 +208,7 @@ func (m *Manifest) Validate() error {
 			Component:   Component,
 			Problem:     fmt.Sprintf("invalid plugin name %q", m.Name),
 			Fix:         "names must match [a-z0-9][a-z0-9-]* and be 2-64 chars",
-			DocsURL:     "https://ar4mirez.github.io/samuel/docs/errors/SAM-MANIFEST-001",
+			DocsURL:     "https://samuelpkg.github.io/samuel/docs/errors/SAM-MANIFEST-001",
 			Recoverable: true,
 		}
 	}
@@ -217,7 +217,7 @@ func (m *Manifest) Validate() error {
 			Component:   Component,
 			Problem:     "manifest missing required field 'version'",
 			Fix:         "add `version = \"X.Y.Z\"` matching the latest tagged release",
-			DocsURL:     "https://ar4mirez.github.io/samuel/docs/errors/SAM-MANIFEST-001",
+			DocsURL:     "https://samuelpkg.github.io/samuel/docs/errors/SAM-MANIFEST-001",
 			Recoverable: true,
 		}
 	}
@@ -228,7 +228,7 @@ func (m *Manifest) Validate() error {
 			Component:   Component,
 			Problem:     "manifest missing required field 'kind'",
 			Fix:         "set `kind = \"skill\" | \"wasm\" | \"oci\" | \"meta\"`",
-			DocsURL:     "https://ar4mirez.github.io/samuel/docs/errors/SAM-MANIFEST-001",
+			DocsURL:     "https://samuelpkg.github.io/samuel/docs/errors/SAM-MANIFEST-001",
 			Recoverable: true,
 		}
 	default:
@@ -236,7 +236,7 @@ func (m *Manifest) Validate() error {
 			Component:   Component,
 			Problem:     fmt.Sprintf("invalid plugin kind %q", m.Kind),
 			Fix:         "kind must be one of: skill, wasm, oci, meta",
-			DocsURL:     "https://ar4mirez.github.io/samuel/docs/errors/SAM-MANIFEST-001",
+			DocsURL:     "https://samuelpkg.github.io/samuel/docs/errors/SAM-MANIFEST-001",
 			Recoverable: true,
 		}
 	}
@@ -246,7 +246,7 @@ func (m *Manifest) Validate() error {
 			Component:   Component,
 			Problem:     "meta plugin must declare at least one entry in [requires]",
 			Fix:         "add `[requires]\\n<plugin-name> = \"^X.Y.Z\"`",
-			DocsURL:     "https://ar4mirez.github.io/samuel/docs/errors/SAM-MANIFEST-001",
+			DocsURL:     "https://samuelpkg.github.io/samuel/docs/errors/SAM-MANIFEST-001",
 			Recoverable: true,
 		}
 	}
@@ -257,7 +257,7 @@ func (m *Manifest) Validate() error {
 				Component:   Component,
 				Problem:     "wasm manifest missing [wasm] module reference",
 				Fix:         "add `[wasm] module = \"plugin.wasm\"`",
-				DocsURL:     "https://ar4mirez.github.io/samuel/docs/errors/SAM-MANIFEST-001",
+				DocsURL:     "https://samuelpkg.github.io/samuel/docs/errors/SAM-MANIFEST-001",
 				Recoverable: true,
 			}
 		}
@@ -268,7 +268,7 @@ func (m *Manifest) Validate() error {
 				Component:   Component,
 				Problem:     "oci manifest missing [oci] image reference",
 				Fix:         "add `[oci] image = \"registry/owner/name:tag\"`",
-				DocsURL:     "https://ar4mirez.github.io/samuel/docs/errors/SAM-MANIFEST-001",
+				DocsURL:     "https://samuelpkg.github.io/samuel/docs/errors/SAM-MANIFEST-001",
 				Recoverable: true,
 			}
 		}
@@ -280,7 +280,7 @@ func (m *Manifest) Validate() error {
 				Component:   Component,
 				Problem:     "invalid samuel.framework version range",
 				Fix:         "use cargo-style ranges (^X.Y.Z, ~X.Y.Z, >=X,<Y, *, exact)",
-				DocsURL:     "https://ar4mirez.github.io/samuel/docs/errors/SAM-MANIFEST-001",
+				DocsURL:     "https://samuelpkg.github.io/samuel/docs/errors/SAM-MANIFEST-001",
 				Recoverable: true,
 			}).Wrap(err)
 		}
@@ -290,7 +290,7 @@ func (m *Manifest) Validate() error {
 			return (&errors.Error{
 				Component:   Component,
 				Problem:     "invalid samuel.protocol version range",
-				DocsURL:     "https://ar4mirez.github.io/samuel/docs/errors/SAM-MANIFEST-001",
+				DocsURL:     "https://samuelpkg.github.io/samuel/docs/errors/SAM-MANIFEST-001",
 				Recoverable: true,
 			}).Wrap(err)
 		}

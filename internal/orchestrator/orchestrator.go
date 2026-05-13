@@ -17,9 +17,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/ar4mirez/samuel/internal/errors"
-	"github.com/ar4mirez/samuel/internal/lock"
-	"github.com/ar4mirez/samuel/internal/plugin"
+	"github.com/samuelpkg/samuel/internal/errors"
+	"github.com/samuelpkg/samuel/internal/lock"
+	"github.com/samuelpkg/samuel/internal/plugin"
 )
 
 // rollbackTimeout caps the fresh context the orchestrator builds for
@@ -160,7 +160,7 @@ func (o *Orchestrator) rollbackOnFailure(name string, installErr error, applied 
 		Component:   Component,
 		Problem:     "install failed and rollback also failed",
 		Fix:         "inspect ~/.samuel state manually before retrying — automated cleanup did not complete",
-		DocsURL:     "https://ar4mirez.github.io/samuel/docs/errors/SAM-ROLLBACK-001",
+		DocsURL:     "https://samuelpkg.github.io/samuel/docs/errors/SAM-ROLLBACK-001",
 		Recoverable: false,
 	}).Wrap(joined)
 }

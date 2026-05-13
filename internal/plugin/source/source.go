@@ -20,7 +20,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ar4mirez/samuel/internal/errors"
+	"github.com/samuelpkg/samuel/internal/errors"
 )
 
 // Component is the structured-error namespace.
@@ -82,7 +82,7 @@ func (defaultFetcher) Fetch(ctx context.Context, req FetchRequest) (*Fetched, er
 			Problem:     "unsupported plugin source",
 			Cause:       repo,
 			Fix:         "use a github.com/<owner>/<repo>, https://, or file:// URL",
-			DocsURL:     "https://ar4mirez.github.io/samuel/docs/errors/SAM-PLUG-SOURCE-001",
+			DocsURL:     "https://samuelpkg.github.io/samuel/docs/errors/SAM-PLUG-SOURCE-001",
 			Recoverable: true,
 		}
 	}

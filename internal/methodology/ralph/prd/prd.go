@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/ar4mirez/samuel/internal/encoding/toon"
+	"github.com/samuelpkg/samuel/internal/encoding/toon"
 )
 
 // Load reads prd.toon from path and decodes it into an AutoPRD. Per-row

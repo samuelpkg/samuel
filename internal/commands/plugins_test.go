@@ -8,12 +8,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ar4mirez/samuel/internal/config"
-	"github.com/ar4mirez/samuel/internal/plugin/capability"
-	"github.com/ar4mirez/samuel/internal/plugin/manifest"
-	"github.com/ar4mirez/samuel/internal/plugin/oci"
-	"github.com/ar4mirez/samuel/internal/plugin/registry"
-	"github.com/ar4mirez/samuel/internal/ui"
+	"github.com/samuelpkg/samuel/internal/config"
+	"github.com/samuelpkg/samuel/internal/plugin/capability"
+	"github.com/samuelpkg/samuel/internal/plugin/manifest"
+	"github.com/samuelpkg/samuel/internal/plugin/oci"
+	"github.com/samuelpkg/samuel/internal/plugin/registry"
+	"github.com/samuelpkg/samuel/internal/ui"
 )
 
 // fakeOciEngine without container runtime.

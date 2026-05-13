@@ -7,15 +7,15 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/ar4mirez/samuel/internal/config"
-	"github.com/ar4mirez/samuel/internal/plugin"
-	"github.com/ar4mirez/samuel/internal/plugin/capability"
-	"github.com/ar4mirez/samuel/internal/plugin/manifest"
-	"github.com/ar4mirez/samuel/internal/plugin/oci"
-	"github.com/ar4mirez/samuel/internal/plugin/registry"
-	"github.com/ar4mirez/samuel/internal/plugin/source"
-	"github.com/ar4mirez/samuel/internal/plugin/verify"
-	"github.com/ar4mirez/samuel/internal/plugin/wasm"
+	"github.com/samuelpkg/samuel/internal/config"
+	"github.com/samuelpkg/samuel/internal/plugin"
+	"github.com/samuelpkg/samuel/internal/plugin/capability"
+	"github.com/samuelpkg/samuel/internal/plugin/manifest"
+	"github.com/samuelpkg/samuel/internal/plugin/oci"
+	"github.com/samuelpkg/samuel/internal/plugin/registry"
+	"github.com/samuelpkg/samuel/internal/plugin/source"
+	"github.com/samuelpkg/samuel/internal/plugin/verify"
+	"github.com/samuelpkg/samuel/internal/plugin/wasm"
 )
 
 // fakeOciEngine implements oci.Engine without needing podman/docker.

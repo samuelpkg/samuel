@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ar4mirez/samuel/internal/ui"
+	"github.com/samuelpkg/samuel/internal/ui"
 )
 
 func executeRoot(t *testing.T, args ...string) (string, string, error) {

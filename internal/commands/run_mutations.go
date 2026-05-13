@@ -6,9 +6,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/ar4mirez/samuel/internal/lock"
-	"github.com/ar4mirez/samuel/internal/methodology/ralph/prd"
-	"github.com/ar4mirez/samuel/internal/ui"
+	"github.com/samuelpkg/samuel/internal/lock"
+	"github.com/samuelpkg/samuel/internal/methodology/ralph/prd"
+	"github.com/samuelpkg/samuel/internal/ui"
 )
 
 // mutate is the shared envelope for every CLI-mutation command. It

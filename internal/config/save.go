@@ -6,7 +6,7 @@ import (
 
 	toml "github.com/pelletier/go-toml/v2"
 
-	"github.com/ar4mirez/samuel/internal/errors"
+	"github.com/samuelpkg/samuel/internal/errors"
 )
 
 // Save writes cfg to samuel.toml in dir atomically. It creates dir if

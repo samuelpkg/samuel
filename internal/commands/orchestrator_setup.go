@@ -4,12 +4,12 @@ import (
 	stderrors "errors"
 	"os"
 
-	"github.com/ar4mirez/samuel/internal/builtins"
-	"github.com/ar4mirez/samuel/internal/components/samuel"
-	"github.com/ar4mirez/samuel/internal/errors"
-	"github.com/ar4mirez/samuel/internal/orchestrator"
-	"github.com/ar4mirez/samuel/internal/plugin"
-	"github.com/ar4mirez/samuel/internal/ui"
+	"github.com/samuelpkg/samuel/internal/builtins"
+	"github.com/samuelpkg/samuel/internal/components/samuel"
+	"github.com/samuelpkg/samuel/internal/errors"
+	"github.com/samuelpkg/samuel/internal/orchestrator"
+	"github.com/samuelpkg/samuel/internal/plugin"
+	"github.com/samuelpkg/samuel/internal/ui"
 )
 
 // buildOrchestrator constructs the v2 orchestrator with the framework's

@@ -4,7 +4,7 @@ import (
 	stderrors "errors"
 	"fmt"
 
-	"github.com/ar4mirez/samuel/internal/errors"
+	"github.com/samuelpkg/samuel/internal/errors"
 )
 
 // RenderError emits the multi-line CLI rendering of a structured

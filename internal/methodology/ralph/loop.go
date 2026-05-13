@@ -18,12 +18,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/ar4mirez/samuel/internal/agents"
-	rctx "github.com/ar4mirez/samuel/internal/methodology/ralph/context"
-	"github.com/ar4mirez/samuel/internal/methodology/hooks"
-	"github.com/ar4mirez/samuel/internal/methodology/ralph/prd"
-	"github.com/ar4mirez/samuel/internal/methodology/ralph/templates"
-	"github.com/ar4mirez/samuel/internal/sandbox"
+	"github.com/samuelpkg/samuel/internal/agents"
+	rctx "github.com/samuelpkg/samuel/internal/methodology/ralph/context"
+	"github.com/samuelpkg/samuel/internal/methodology/hooks"
+	"github.com/samuelpkg/samuel/internal/methodology/ralph/prd"
+	"github.com/samuelpkg/samuel/internal/methodology/ralph/templates"
+	"github.com/samuelpkg/samuel/internal/sandbox"
 )
 
 // LoopConfig parameterizes one RunAutoLoop invocation.

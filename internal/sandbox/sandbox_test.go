@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ar4mirez/samuel/internal/agents"
+	"github.com/samuelpkg/samuel/internal/agents"
 )
 
 func TestRun_HostMode_RunsRealBinary(t *testing.T) {

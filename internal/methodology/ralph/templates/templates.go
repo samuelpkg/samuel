@@ -18,7 +18,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/ar4mirez/samuel/internal/methodology/ralph/prd"
+	"github.com/samuelpkg/samuel/internal/methodology/ralph/prd"
 )
 
 //go:embed prompt.md.tmpl

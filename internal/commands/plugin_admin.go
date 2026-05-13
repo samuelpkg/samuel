@@ -22,7 +22,7 @@ import (
 	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/cobra"
 
-	"github.com/ar4mirez/samuel/internal/plugin/manifest"
+	"github.com/samuelpkg/samuel/internal/plugin/manifest"
 )
 
 var (

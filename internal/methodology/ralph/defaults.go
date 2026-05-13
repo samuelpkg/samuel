@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	rctx "github.com/ar4mirez/samuel/internal/methodology/ralph/context"
-	"github.com/ar4mirez/samuel/internal/methodology/hooks"
-	"github.com/ar4mirez/samuel/internal/methodology/ralph/prd"
+	rctx "github.com/samuelpkg/samuel/internal/methodology/ralph/context"
+	"github.com/samuelpkg/samuel/internal/methodology/hooks"
+	"github.com/samuelpkg/samuel/internal/methodology/ralph/prd"
 )
 
 // RegisterDefaults installs the built-in handlers for every hook

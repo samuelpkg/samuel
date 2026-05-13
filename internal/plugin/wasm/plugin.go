@@ -9,11 +9,11 @@ import (
 	"github.com/tetratelabs/wazero"
 	"github.com/tetratelabs/wazero/imports/wasi_snapshot_preview1"
 
-	"github.com/ar4mirez/samuel/internal/errors"
-	"github.com/ar4mirez/samuel/internal/plugin"
-	"github.com/ar4mirez/samuel/internal/plugin/capability"
-	"github.com/ar4mirez/samuel/internal/plugin/manifest"
-	"github.com/ar4mirez/samuel/internal/plugin/source"
+	"github.com/samuelpkg/samuel/internal/errors"
+	"github.com/samuelpkg/samuel/internal/plugin"
+	"github.com/samuelpkg/samuel/internal/plugin/capability"
+	"github.com/samuelpkg/samuel/internal/plugin/manifest"
+	"github.com/samuelpkg/samuel/internal/plugin/source"
 )
 
 // ModuleFileName is the canonical filename inside the install directory.

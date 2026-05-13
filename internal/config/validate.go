@@ -4,7 +4,7 @@ import (
 	stderrors "errors"
 	"strings"
 
-	"github.com/ar4mirez/samuel/internal/errors"
+	"github.com/samuelpkg/samuel/internal/errors"
 )
 
 // validKinds is the closed enum every PluginEntry.Kind must belong to.
@@ -48,7 +48,7 @@ func (c *Config) Validate() error {
 			Component:   "config",
 			Problem:     "samuel.toml missing required `version`",
 			Fix:         "set version = \"" + SchemaVersion + "\" at the top of samuel.toml",
-			DocsURL:     "https://ar4mirez.github.io/samuel/docs/errors/SAM-CFG-010",
+			DocsURL:     "https://samuelpkg.github.io/samuel/docs/errors/SAM-CFG-010",
 			Recoverable: true,
 		})
 	}
@@ -59,7 +59,7 @@ func (c *Config) Validate() error {
 					Component:   "config",
 					Problem:     "default_methodology=\"" + c.DefaultMethodology + "\" is not installed",
 					Fix:         "add a [methodology." + c.DefaultMethodology + "] block, install a plugin that provides it, or change to a builtin (e.g. ralph)",
-					DocsURL:     "https://ar4mirez.github.io/samuel/docs/errors/SAM-CFG-011",
+					DocsURL:     "https://samuelpkg.github.io/samuel/docs/errors/SAM-CFG-011",
 					Recoverable: true,
 				})
 			}
@@ -80,7 +80,7 @@ func (c *Config) Validate() error {
 				Component:   "config",
 				Problem:     "plugin \"" + p.Name + "\" has invalid kind \"" + p.Kind + "\"",
 				Fix:         "use one of: builtin, skill, wasm, oci",
-				DocsURL:     "https://ar4mirez.github.io/samuel/docs/errors/SAM-CFG-012",
+				DocsURL:     "https://samuelpkg.github.io/samuel/docs/errors/SAM-CFG-012",
 				Cause:       indexedCause(i),
 				Recoverable: true,
 			})

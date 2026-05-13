@@ -13,7 +13,7 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/ar4mirez/samuel/internal/errors"
+	"github.com/samuelpkg/samuel/internal/errors"
 )
 
 // acquireFileLock opens the lock file (creating if needed), takes a
@@ -73,7 +73,7 @@ func acquireFileLock(home string) (release func(), err error) {
 				Problem:     "another samuel process is running",
 				Cause:       fmt.Sprintf("flock busy (holder: %s)", holderHint),
 				Fix:         "wait for the other samuel process to finish, then re-run",
-				DocsURL:     "https://ar4mirez.github.io/samuel/docs/errors/SAM-LOCK-001",
+				DocsURL:     "https://samuelpkg.github.io/samuel/docs/errors/SAM-LOCK-001",
 				Recoverable: true,
 				Path:        lockFile,
 			}).Wrap(flockErr)
@@ -82,7 +82,7 @@ func acquireFileLock(home string) (release func(), err error) {
 			Component:   Component,
 			Problem:     "cannot acquire lock (flock failed)",
 			Fix:         "verify the filesystem at " + lockFile + " supports flock(2); NFS may require lockd",
-			DocsURL:     "https://ar4mirez.github.io/samuel/docs/errors/SAM-LOCK-002",
+			DocsURL:     "https://samuelpkg.github.io/samuel/docs/errors/SAM-LOCK-002",
 			Recoverable: true,
 			Path:        lockFile,
 		}).Wrap(flockErr)
