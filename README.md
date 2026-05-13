@@ -90,7 +90,7 @@ Full notice: [Migrating from v1](https://samuelpkg.github.io/samuel/getting-star
 ## Repo layout
 
 ```text
-samuel_v2/
+samuel/
 ├── cmd/samuel/             # CLI entry point
 ├── internal/
 │   ├── commands/           # cobra commands (init, install, run, sync, doctor, plugin, version)
