@@ -1,4 +1,4 @@
-name = "go-guide-wasm"
+name = "samuel-go-guide-wasm"
 version = "0.1.0"
 kind = "wasm"
 summary = "TinyGo port of samuel-go-guide; surfaces a `lint` export."
