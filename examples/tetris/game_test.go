@@ -157,6 +157,70 @@ func TestClearLines_NoFullRowsLeavesBoardUntouched(t *testing.T) {
 	}
 }
 
+func TestSpawn_PlacesPieceOnEmptyBoard(t *testing.T) {
+	var g Game
+	if !g.Spawn(Tetromino{Shape: ShapeI}, 0, 3) {
+		t.Fatalf("expected spawn to succeed on empty board")
+	}
+	if g.GameOver {
+		t.Fatalf("expected GameOver=false after successful spawn")
+	}
+	if g.Active.Row != 0 || g.Active.Col != 3 {
+		t.Fatalf("expected Active at (0,3), got (%d,%d)", g.Active.Row, g.Active.Col)
+	}
+	if g.Active.Piece.Shape != ShapeI {
+		t.Fatalf("expected Active piece I, got %d", g.Active.Piece.Shape)
+	}
+}
+
+// TestSpawn_GameOverWhenColumnZeroFull is the task 1.5 acceptance test:
+// filling column 0 to the top and spawning an I in that column triggers
+// game-over within one tick.
+func TestSpawn_GameOverWhenColumnZeroFull(t *testing.T) {
+	var g Game
+	for r := 0; r < BoardRows; r++ {
+		g.Board[r][0] = Cell(ShapeO + 1)
+	}
+	// Horizontal I rotation 0 fills bbox row 1 cols 0..3. Spawn at (0, 0)
+	// puts a filled cell at board (1, 0), which is in the stacked column.
+	if g.Spawn(Tetromino{Shape: ShapeI}, 0, 0) {
+		t.Fatalf("expected spawn to fail when column 0 is full")
+	}
+	if !g.GameOver {
+		t.Fatalf("expected GameOver flag set after blocked spawn")
+	}
+}
+
+func TestSpawn_LeavesActiveUntouchedWhenBlocked(t *testing.T) {
+	var g Game
+	for r := 0; r < BoardRows; r++ {
+		g.Board[r][0] = Cell(ShapeO + 1)
+	}
+	prev := Active{Piece: Tetromino{Shape: ShapeT}, Row: 5, Col: 4}
+	g.Active = prev
+	if g.Spawn(Tetromino{Shape: ShapeI}, 0, 0) {
+		t.Fatalf("expected spawn to fail")
+	}
+	if g.Active != prev {
+		t.Fatalf("expected Active unchanged after failed spawn, got %+v", g.Active)
+	}
+}
+
+func TestTick_NoopAfterGameOver(t *testing.T) {
+	var g Game
+	g.GameOver = true
+	g.Active = Active{Piece: Tetromino{Shape: ShapeI}, Row: 0, Col: 3}
+	if locked := g.Tick(); locked {
+		t.Fatalf("expected Tick to return false after game over")
+	}
+	if g.Active.Row != 0 {
+		t.Fatalf("expected Active.Row unchanged, got %d", g.Active.Row)
+	}
+	if g.Score != 0 {
+		t.Fatalf("expected Score unchanged, got %d", g.Score)
+	}
+}
+
 func TestFits_RejectsOutOfBoundsAndOccupied(t *testing.T) {
 	var g Game
 	below := Active{Piece: Tetromino{Shape: ShapeI}, Row: 19, Col: 3} // cells at row 20

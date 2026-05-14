@@ -13,20 +13,25 @@ type Active struct {
 	Row, Col int
 }
 
-// Game holds the playing state: the board, the active piece, and the
-// running score. The zero value is a fresh game with an empty board and
-// no active piece configured.
+// Game holds the playing state: the board, the active piece, the running
+// score, and a GameOver flag set once a piece cannot spawn. The zero value
+// is a fresh game with an empty board and no active piece configured.
 type Game struct {
-	Board  Board
-	Active Active
-	Score  int
+	Board    Board
+	Active   Active
+	Score    int
+	GameOver bool
 }
 
-// Tick advances gravity by one step. If the active piece can descend by
-// a row, it descends and Tick returns false. Otherwise the piece locks,
+// Tick advances gravity by one step. If GameOver is already set, Tick is
+// a no-op and returns false. Otherwise: if the active piece can descend
+// by a row, it descends and Tick returns false; if not, the piece locks,
 // any complete rows clear, the score gains 10×cleared², and Tick returns
 // true to signal that a new piece should be spawned.
 func (g *Game) Tick() bool {
+	if g.GameOver {
+		return false
+	}
 	next := g.Active
 	next.Row++
 	if g.fits(next) {
@@ -36,6 +41,20 @@ func (g *Game) Tick() bool {
 	g.lock()
 	cleared := g.clearLines()
 	g.Score += 10 * cleared * cleared
+	return true
+}
+
+// Spawn places piece at the given (row, col) bounding-box top-left. If
+// the position is blocked — even one filled bit overlaps the stack or
+// falls outside the board — Spawn sets GameOver and returns false without
+// touching g.Active. On success it updates g.Active and returns true.
+func (g *Game) Spawn(piece Tetromino, row, col int) bool {
+	a := Active{Piece: piece, Row: row, Col: col}
+	if !g.fits(a) {
+		g.GameOver = true
+		return false
+	}
+	g.Active = a
 	return true
 }
 
