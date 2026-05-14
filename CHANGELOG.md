@@ -7,6 +7,51 @@ this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v2.0.0-rc.16] — `samuel run` works on a fresh host
+
+### Fixed
+
+- **`samuel run start` no longer fails with `claude exited 1:` (empty
+  stderr) on the very first iteration.** Two compounding bugs:
+
+  1. **Host-exec stripped OS plumbing from the agent's environment.**
+     `internal/sandbox/sandbox.go:runHost` applied the adapter's
+     `EnvAllowlist` (`["ANTHROPIC_API_KEY", "ANTHROPIC_BASE_URL"]` for
+     `claude`, `["OPENAI_API_KEY", "OPENAI_BASE_URL"]` for `codex`) as
+     the *entire* env. The spawned CLI inherited no `HOME`, `PATH`,
+     `USER`, `TERM` — so Claude Code couldn't read its OAuth
+     credentials from the macOS Keychain and Codex couldn't read
+     `~/.codex/auth.json`. Both exited 1.
+
+     Fix: a new `baseHostEnv` (`HOME PATH USER LOGNAME SHELL TMPDIR
+     PWD TERM LANG LC_ALL LC_CTYPE`) is always passed through in host
+     mode; the adapter's allowlist is for secrets, layered on top.
+     OCI-sandbox mode is untouched — its env is built inside the
+     container.
+
+  2. **The error swallowed the agent's actual message.** The wrapper
+     formatted `"<agent> exited <N>: <stderr>"`, but Claude Code
+     prints fatal errors to *stdout*, not stderr. The error line
+     surfaced as `claude exited 1:` with nothing after it. The
+     formatter now falls back to stdout when stderr is empty.
+
+- **Ralph loop now propagates agent output on failure.**
+  `internal/methodology/ralph/loop.go` discarded `agentOut.Stdout` /
+  `agentOut.Stderr` when `invokeAgent` returned an error, so
+  `after:agent.invoke` hooks (which append the agent's output to
+  `progress.md`) saw nothing. The captured output is now attached to
+  the hook payload regardless of exit status.
+
+### Verified
+
+- End-to-end against both built-in adapters on a fresh macOS host:
+  `claude` and `codex` each drove `samuel/examples/tetris/` from a
+  clean state, completed task 1.2 in a single iteration, and the
+  generated package passed `go test ./...`. The full tetris sweep
+  (tasks 1.1 → 1.5) lands in this rc as commits `0637e43..86289e0`
+  as a side-effect of the verification run — the fixture is the
+  manual-test fixture by design (see [`examples/tetris/CLAUDE.md`]).
+
 ## [v2.0.0-rc.15] — Hermetic e2e test suite
 
 Partial close on [Issue #7](https://github.com/samuelpkg/samuel/issues/7) (hermetic tier — the live-registry tier is still scoped for follow-up).

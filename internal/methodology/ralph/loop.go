@@ -179,6 +179,11 @@ func RunAutoLoop(ctx context.Context, cfg LoopConfig) error {
 		}
 
 		agentOut, err := invokeAgent(ctx, cfg, p, prompt, iterType)
+		// Captured output is useful even on failure — surface it through
+		// the hook payload so after:agent.invoke can append it to
+		// progress.md / propagate it to the UI.
+		input.Payload["agent_stdout"] = agentOut.Stdout
+		input.Payload["agent_stderr"] = agentOut.Stderr
 		if err != nil {
 			consecutiveFailures++
 			notifyIterEnd(cfg.OnIterEnd, i, err)
@@ -187,8 +192,6 @@ func RunAutoLoop(ctx context.Context, cfg LoopConfig) error {
 			}
 		} else {
 			consecutiveFailures = 0
-			input.Payload["agent_stdout"] = agentOut.Stdout
-			input.Payload["agent_stderr"] = agentOut.Stderr
 		}
 
 		if _, err := cfg.Hooks.Run(ctx, hooks.AfterAgent, input, hooks.AllowAll); err != nil {

@@ -35,6 +35,17 @@ const (
 	SandboxDryRun = "dry-run"
 )
 
+// baseHostEnv is the always-passed-through OS plumbing for host-exec
+// mode. The adapter's EnvAllowlist is for secrets/API keys; these are
+// the variables every binary needs to function at all (find HOME for
+// config, PATH for helper tools, TERM for stdio sizing, locale for
+// non-ASCII output). Without HOME, Claude Code can't read its OAuth
+// credentials from the macOS Keychain and exits 1.
+var baseHostEnv = []string{
+	"HOME", "PATH", "USER", "LOGNAME", "SHELL", "TMPDIR", "PWD",
+	"TERM", "LANG", "LC_ALL", "LC_CTYPE",
+}
+
 // Runner is the agents.CommandRunner implementation. Its zero value is
 // usable as a "host-exec only" runner; set ProjectDir / RunDir for the
 // OCI path.
@@ -99,7 +110,7 @@ func (r *Runner) Run(ctx context.Context, name string, args []string, opts agent
 func (r *Runner) runHost(ctx context.Context, name string, args []string, opts agents.CommandOptions) (agents.Result, error) {
 	cmd := exec.CommandContext(ctx, name, args...)
 	cmd.Dir = opts.WorkDir
-	cmd.Env = filterEnv(r.HostEnv, opts.EnvAllowlist)
+	cmd.Env = filterEnv(r.HostEnv, mergeStrings(baseHostEnv, opts.EnvAllowlist))
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
@@ -110,12 +121,42 @@ func (r *Runner) runHost(ctx context.Context, name string, args []string, opts a
 	res := agents.Result{Stdout: stdout.String(), Stderr: stderr.String()}
 	if exitErr, ok := asExitError(err); ok {
 		res.ExitCode = exitErr.ExitCode()
-		return res, fmt.Errorf("%s exited %d: %s", name, res.ExitCode, strings.TrimSpace(res.Stderr))
+		return res, fmt.Errorf("%s exited %d: %s", name, res.ExitCode, firstNonEmpty(res.Stderr, res.Stdout))
 	}
 	if err != nil {
 		return res, err
 	}
 	return res, nil
+}
+
+// firstNonEmpty returns the trimmed value of the first non-empty
+// argument. Many CLIs (Claude Code included) print fatal errors to
+// stdout instead of stderr, so falling back to stdout keeps the user
+// from seeing an opaque "exited N: " line.
+func firstNonEmpty(parts ...string) string {
+	for _, p := range parts {
+		if s := strings.TrimSpace(p); s != "" {
+			return s
+		}
+	}
+	return ""
+}
+
+// mergeStrings concatenates two slices and drops duplicates, preserving
+// order of first appearance.
+func mergeStrings(a, b []string) []string {
+	out := make([]string, 0, len(a)+len(b))
+	seen := map[string]struct{}{}
+	for _, src := range [][]string{a, b} {
+		for _, s := range src {
+			if _, ok := seen[s]; ok {
+				continue
+			}
+			seen[s] = struct{}{}
+			out = append(out, s)
+		}
+	}
+	return out
 }
 
 // runOCI invokes the agent inside a sandbox container via the OCI tier
