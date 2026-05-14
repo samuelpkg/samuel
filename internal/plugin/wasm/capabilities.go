@@ -1,9 +1,10 @@
-// Capabilities collects every resource a wasm plugin can request:
-// filesystem mounts, environment variables, network hosts, memory cap,
-// and per-invocation timeout. The Runtime consumes Capabilities to
-// shape the wazero ModuleConfig and host-side proxies — keeping the
-// declarative shape (manifest) separate from the imperative shape
-// (wazero config) makes the cap surface explicit and unit-testable.
+// Package wasm — Capabilities collects every resource a wasm plugin
+// can request: filesystem mounts, environment variables, network
+// hosts, memory cap, and per-invocation timeout. The Runtime consumes
+// Capabilities to shape the wazero ModuleConfig and host-side
+// proxies — keeping the declarative shape (manifest) separate from
+// the imperative shape (wazero config) makes the cap surface explicit
+// and unit-testable.
 //
 // A zero-value Capabilities denies everything except CPU/memory at the
 // safe defaults. Per-capability constructor helpers exist for

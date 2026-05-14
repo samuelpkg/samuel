@@ -158,9 +158,11 @@ func TestModuleCache_LRUEvictsUnderBudget(t *testing.T) {
 	// Force tight budget — anything but the most recent module must
 	// be evicted.
 	rt.SetCacheBudget(64) // bytes; ridiculously small to force eviction
-	rt.LoadCached(ctx, BuildFixtureWasm(0, 1))
-	rt.LoadCached(ctx, BuildFixtureWasm(0, 2))
-	rt.LoadCached(ctx, BuildFixtureWasm(0, 3))
+	for _, p := range []int32{1, 2, 3} {
+		if _, _, err := rt.LoadCached(ctx, BuildFixtureWasm(0, p)); err != nil {
+			t.Fatalf("LoadCached(protocol=%d): %v", p, err)
+		}
+	}
 	stats := rt.CacheStats()
 	if stats.Modules > 2 {
 		t.Errorf("LRU should evict under tight budget; got %d modules", stats.Modules)

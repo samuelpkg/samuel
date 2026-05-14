@@ -122,6 +122,22 @@ func TestCapabilities_Network_DenyByDefault(t *testing.T) {
 	}
 }
 
+func TestCapabilities_WithEnv_AppendsAndDedups(t *testing.T) {
+	c := Capabilities{}.withEnv("HOME", "PATH").withEnv("HOME", "USER")
+	got := map[string]bool{}
+	for _, k := range c.Env {
+		got[k] = true
+	}
+	for _, want := range []string{"HOME", "PATH", "USER"} {
+		if !got[want] {
+			t.Errorf("withEnv should retain %q, got %v", want, c.Env)
+		}
+	}
+	if len(c.Env) != 3 {
+		t.Errorf("expected 3 unique keys after dedup, got %d (%v)", len(c.Env), c.Env)
+	}
+}
+
 func TestCapabilities_Network_WildcardSubdomain(t *testing.T) {
 	c := Capabilities{}.withNetwork("*.example.com")
 	if !c.AllowsHost("api.example.com") {
