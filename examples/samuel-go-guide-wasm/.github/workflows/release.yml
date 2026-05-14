@@ -30,18 +30,18 @@ jobs:
             exit 1
           fi
       - uses: sigstore/cosign-installer@v3
-      - name: Sign with cosign (keyless)
+      - name: Sign with cosign (keyless, sigstore-bundle format)
         env:
           COSIGN_EXPERIMENTAL: "1"
         run: |
+          # `--bundle` emits the sigstore-go JSON bundle the framework
+          # verifier expects (see internal/plugin/verify/sigstore.go).
           cosign sign-blob --yes \
-            --output-signature plugin.wasm.sig \
-            --output-certificate plugin.wasm.pem \
+            --bundle plugin.wasm.bundle \
             plugin.wasm
       - uses: softprops/action-gh-release@v2
         with:
           files: |
             plugin.wasm
-            plugin.wasm.sig
-            plugin.wasm.pem
+            plugin.wasm.bundle
             samuel-plugin.toml

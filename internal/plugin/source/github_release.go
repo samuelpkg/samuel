@@ -38,12 +38,18 @@ import (
 // flow publishes (see internal/commands/new.go's scaffolded
 // release.yml + examples/samuel-go-guide-wasm/.github/workflows/
 // release.yml).
+//
+// `plugin.wasm.bundle` is the sigstore-go JSON bundle the verifier
+// expects (internal/plugin/verify/sigstore.go's VerifyBlob looks for
+// <artifact>.bundle alongside the artifact). The legacy `.sig`+`.pem`
+// pair is still downloaded when present for inspection, but
+// verification routes through the bundle.
 var githubReleaseAssets = struct {
 	required []string
 	optional []string
 }{
 	required: []string{"plugin.wasm", "samuel-plugin.toml"},
-	optional: []string{"plugin.wasm.sig", "plugin.wasm.pem"},
+	optional: []string{"plugin.wasm.bundle", "plugin.wasm.sig", "plugin.wasm.pem"},
 }
 
 // splitGitHubRepo parses `github.com/<owner>/<repo>` into its two
