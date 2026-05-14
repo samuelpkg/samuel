@@ -30,13 +30,19 @@ jobs:
             exit 1
           fi
       - uses: sigstore/cosign-installer@v3
-      - name: Sign with cosign (keyless, sigstore-bundle format)
+      - name: Sign with cosign (keyless, sigstore protobuf-bundle format)
         env:
           COSIGN_EXPERIMENTAL: "1"
         run: |
-          # `--bundle` emits the sigstore-go JSON bundle the framework
-          # verifier expects (see internal/plugin/verify/sigstore.go).
+          # --new-bundle-format emits the sigstore-go protobuf-JSON
+          # bundle (mediaType: application/vnd.dev.sigstore.bundle+json)
+          # the framework verifier expects. sigstore-go's
+          # bundle.LoadJSONFromPath only recognizes that format; the
+          # legacy --bundle output {base64Signature, cert, rekorBundle}
+          # is silently rejected and surfaces as "signature bundle
+          # missing" downstream.
           cosign sign-blob --yes \
+            --new-bundle-format \
             --bundle plugin.wasm.bundle \
             plugin.wasm
       - uses: softprops/action-gh-release@v2
