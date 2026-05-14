@@ -1,0 +1,56 @@
+# golangci-lint v2 config — restores the lint surface this repo ran on
+# under v1.x before the Go 1.25 / sigstore-go bump in PRD 0008.
+#
+# v2 ships stricter defaults than v1 in two areas that fire across the
+# codebase but are out of scope for PRD 0008:
+#
+#   - errcheck on fmt.Fprint*/Close — v1 ignored these by convention;
+#     v2 requires explicit handling. The fmt.Fprint* sites are CLI
+#     output where the failure mode is fatal-by-OS anyway; the Close
+#     sites are deferred cleanup.
+#   - staticcheck QF (quick-fix) and a few ST (style) checks — these
+#     are stylistic improvements (De Morgan, Fprintf vs WriteString,
+#     omit-type declarations) that pre-date this PR and live in
+#     untouched files.
+#
+# When the codebase is ready to adopt v2's stricter defaults, replace
+# this file with the linter list you want and migrate the issues in
+# their own PR.
+
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+  settings:
+    errcheck:
+      # Functions whose returned error is conventionally ignored at
+      # the call site (CLI output + cleanup).
+      exclude-functions:
+        - fmt.Fprint
+        - fmt.Fprintln
+        - fmt.Fprintf
+        - (io.Closer).Close
+        - (*os.File).Close
+        - (*bytes.Buffer).WriteString
+        - (*strings.Builder).WriteString
+    staticcheck:
+      checks:
+        - all
+        # QF1xxx — quick-fix / style suggestions. Not bug indicators.
+        - -QF1001
+        - -QF1003
+        - -QF1008
+        - -QF1011
+        - -QF1012
+        # ST1xxx — style-tier checks (omit type, naming).
+        - -ST1023
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
