@@ -7,6 +7,42 @@ this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- **`SAMUEL_VERIFY_ALLOW_UNSIGNED` env hook** at
+  [`internal/commands/plugins.go`](internal/commands/plugins.go).
+  Setting the env var to `1`, `true`, or `yes` is equivalent to
+  passing `--allow-unsigned` on every `samuel install` /
+  `samuel update` in that shell. Intended for CI / scripted
+  workflows; documented in
+  [`docs/plugin-authors/signing.md`](docs/plugin-authors/signing.md).
+
+### Fixed
+
+- **Wasm-tier release fetch** at
+  [`internal/plugin/source/github_release.go`](internal/plugin/source/github_release.go).
+  When the registry entry sets `kind = "wasm"` against a
+  `github.com/<owner>/<repo>` source, the framework now pulls
+  `plugin.wasm` + `plugin.wasm.bundle` + `samuel-plugin.toml` from
+  the GitHub release-asset URL instead of cloning the repo tree
+  (the cosign-signed binary doesn't live in the source tree). Falls
+  back to `fetchGit` when no release is present, so legacy
+  binary-in-tree plugins still install.
+- **Cosign release flow** for wasm-tier plugins uses
+  `cosign sign-blob --new-bundle-format --bundle <path> <artifact>`
+  to emit the sigstore-go protobuf JSON bundle
+  (mediaType `application/vnd.dev.sigstore.bundle.v0.3+json`). The
+  legacy `--bundle` output (`{base64Signature, cert, rekorBundle}`)
+  is not sigstore-go-compatible and was silently rejected by the
+  verifier as `signature bundle missing`. Both the reference
+  plugin's release workflow and the `samuel new plugin --kind=wasm`
+  scaffold template are updated.
+- **`DefaultPolicy().IdentityPatterns`** now uses `**` so the
+  GitHub Actions OIDC SAN format (`<org>/<repo>/.github/workflows/
+  <file>@refs/tags/<ver>` — multiple path segments) matches. The
+  previous `*` glob only accepted bare `<org>/<repo>` URLs and
+  rejected every real-world signed plugin.
+
 ## [v2.2.0] — WASM plugin tier first-class (capability gates + reference plugin)
 
 v2.0 scaffolded `internal/plugin/wasm/` but the tier had no capability

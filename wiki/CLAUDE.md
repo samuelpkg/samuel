@@ -84,7 +84,7 @@ Bottom-up. Lowest-dependency packages first, then layers built on top, then docs
 - **Discovery-only mode**: `samuel run --discover-only` ships as built-in. #v2-decision 2026-05-12.
 - **Prompt template variables**: spec filed in [[concepts/prompt-template-variables]]. #v2-decision 2026-05-12.
 - Identity/auth for private plugin registries on GitHub — GH token via env, or full GH App?
-- WASM cold-start budget target — aim < 50ms per invocation.
+- ~~WASM cold-start budget target — aim < 50ms per invocation.~~ **Resolved (v2.2 / PRD 0009):** ≤50 ms median on reference laptop; CI gate at 150 ms (3× reference budget). `BenchmarkColdStart_TinyGoMinimal` measures ~0.65 ms on Apple M1 Max. Enforced by [`.github/workflows/wasm-perf.yml`](../.github/workflows/wasm-perf.yml). Documented in [[synthesis/v2-rc-cycle-lessons]] and [`docs/rfd/0010.md`](../docs/rfd/0010.md).
 - Network policy granularity for OCI bridge — host-based allowlist, regex, or strict deny-by-default with explicit per-call consents?
 
 ---

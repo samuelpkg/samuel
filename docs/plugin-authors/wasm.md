@@ -208,12 +208,31 @@ RFD 0012 (post-v2.5).
 The scaffold's `.github/workflows/release.yml` does:
 
 1. `tinygo build -o plugin.wasm -target=wasi -no-debug -opt=2 ./cmd`
-2. Cosign keyless sign (OIDC) → `plugin.wasm.sig` + `plugin.wasm.pem`
-3. Attach to the GitHub Release for the tag
+2. Cosign keyless sign (OIDC, sigstore protobuf-bundle format):
 
-The framework's verifier (PRD 0008, RFD 0009) checks the cosign
-identity at install. Publishing to the registry is a follow-up PR
-to `samuelpkg/samuel-registry`.
+   ```bash
+   cosign sign-blob --yes --new-bundle-format \
+     --bundle plugin.wasm.bundle plugin.wasm
+   ```
+
+3. Upload `plugin.wasm` + `plugin.wasm.bundle` + `samuel-plugin.toml`
+   as release assets.
+
+`--new-bundle-format` is required: the framework verifier uses
+sigstore-go's `bundle.LoadJSONFromPath`, which only parses the
+sigstore protobuf JSON (mediaType
+`application/vnd.dev.sigstore.bundle.v0.3+json`). Cosign's legacy
+`--bundle` output (`{base64Signature, cert, rekorBundle}`) is
+silently rejected and surfaces as `signature bundle missing` at
+install.
+
+At install time, the wasm-tier fetcher pulls the release assets
+directly via `https://github.com/<owner>/<repo>/releases/download/<tag>/<asset>`
+(no git clone needed — the wasm binary lives in the release, not
+the tree). See [RFD 0010](../rfd/0010.md) for the fetcher design.
+
+Publishing to the registry is a follow-up PR to
+`samuelpkg/samuel-registry`.
 
 ## Reference plugin
 

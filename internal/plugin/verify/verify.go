@@ -13,13 +13,16 @@
 //	signed_default = true
 //	allow_unsigned_for = ["local", "dev"]
 //	identity_patterns = [
-//	  "https://github.com/samuelpkg/*",
-//	  "https://github.com/anthropics/skills/*",
+//	  "https://github.com/samuelpkg/**",
+//	  "https://github.com/anthropics/skills/**",
 //	]
 //	trusted_root = "https://tuf-repo-cdn.sigstore.dev"
 //
 // identity_patterns is OR-ed (any pattern match is enough) per RFD 0003
-// resolution #3.
+// resolution #3. `*` matches one path segment; `**` matches any sequence
+// (including `/` and `@`). Real GitHub Actions OIDC SANs span many
+// segments (`<org>/<repo>/.github/workflows/<file>@refs/tags/<ver>`),
+// so the default policy uses `**`.
 //
 // Verification results are cached at ~/.samuel/cache/verify/ keyed by
 // the artifact digest; the cache is invalidated whenever the samuel

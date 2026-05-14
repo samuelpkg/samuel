@@ -115,8 +115,19 @@ The hermetic tier has one honest limitation: `file://` URLs route through `sourc
 ## What's left after rc.15
 
 - ~~**[Issue #10](https://github.com/samuelpkg/samuel/issues/10)** — `e2e/live/` tier.~~ **Closed in v2.0.1** by PRD 0007. Nightly drift detection against `samuel-test-registry` exercises the `source.fetchGit` codepath (rc.6 v-prefix fallback, rc.9 `.git` strip) plus install/update/search/doctor/uninstall at the CLI surface. Auto-issue on red, auto-close on recovery.
-- **Remaining open after v2.0.1**: real Sigstore math via `sigstore-go` (PRD 0008, [Issue #6](https://github.com/samuelpkg/samuel/issues/6) partial) for v2.1. The wire format + lockfile schema stay stable across that transition; the live e2e tier currently runs with `SAMUEL_VERIFY_ALLOW_UNSIGNED=1` until signing lands.
-- **WASM and OCI plugin tiers** — both depend on at least one published plugin of each kind existing in the live registry. Out of scope for v2.0.
+- ~~**Remaining open after v2.0.1**: real Sigstore math via `sigstore-go`~~ **Closed in v2.1.0** by PRD 0008. `verify.Default()` returns `SigstoreVerifier`; `IsProduction()` is `true`. Wire format + lockfile schema stable across the transition.
+- ~~**WASM and OCI plugin tiers** — both depend on at least one published plugin of each kind existing in the live registry.~~ **WASM closed in v2.2.0** by PRD 0009: capability enforcement, module cache, cold-start ≤50 ms median (CI gate at 150 ms), `samuel new plugin --kind=wasm` scaffolding, reference plugin `samuel-go-guide-wasm@0.1.3` (cosign-signed sigstore protobuf bundle) live in the registry. OCI tier tracked under PRD 0010 (v2.3.0).
+
+## What v2.2 cycle taught us (PRD 0009 follow-ups)
+
+The wasm tier turned up four downstream gaps nobody noticed until the live install path was actually exercised. All four landed as separate fix PRs in the same session:
+
+- **Release-asset path** ([#32](https://github.com/samuelpkg/samuel/pull/32)). `source.fetchGit` clones the repo and reads from the tree, but a cosign-signed wasm release deliberately doesn't commit the binary — it lives in the GitHub release. The fetcher now downloads `plugin.wasm` + `plugin.wasm.bundle` + manifest from `releases/download/<tag>/<asset>` when `kind = "wasm"` + `github.com/...`, with a fall-through to `fetchGit` for legacy / dev-snapshot plugins.
+- **Cosign bundle format** ([#33](https://github.com/samuelpkg/samuel/pull/33) → [#34](https://github.com/samuelpkg/samuel/pull/34)). `cosign sign-blob --bundle` emits the **legacy** format (`{base64Signature, cert, rekorBundle}`). Sigstore-go's `bundle.LoadJSONFromPath` only parses the **protobuf JSON** bundle (mediaType `application/vnd.dev.sigstore.bundle.v0.3+json`). The legacy output is silently rejected as "signature bundle missing." `--new-bundle-format` is the cosign v2.4+ flag that produces the right thing. The scaffold template was updated so every future `samuel new plugin --kind=wasm` ships the correct format from day one.
+- **Identity-pattern glob semantics** ([#35](https://github.com/samuelpkg/samuel/pull/35)). `DefaultPolicy()` shipped `https://github.com/samuelpkg/*`. Sigstore-go's translation makes `*` mean "one path segment." Real GitHub Actions OIDC SANs are `<org>/<repo>/.github/workflows/<file>@refs/tags/<ver>` — many segments. Nothing real-world ever matched. Fixed: `samuelpkg/**` (subtree match); `globMatch` taught to recognize `**` too.
+- **Env-var test contract** ([#36](https://github.com/samuelpkg/samuel/pull/36)). The live-test helpers set `SAMUEL_VERIFY_ALLOW_UNSIGNED=1` since PRD 0007 expecting the framework to honor it. Nothing in the binary read it. The v2.0 stub verifier accepted everything anyway, so the gap was invisible; PRD 0008's production verifier promoted the silent test flake into 8 failing nightly tests. Wired into `runInstall` / `runUpdate`; documented in [`docs/plugin-authors/signing.md`](../../docs/plugin-authors/signing.md).
+
+**Meta-lesson**: cosign / sigstore-go has two distinct artifact formats with overlapping names ("bundle"). Library-level docs are sparse. End-to-end live testing is the only honest way to catch this — unit tests against handcrafted bundles can't detect that the real cosign output is the wrong shape. Future signing-related work should target an **end-to-end smoke test against a fresh release** as the first acceptance criterion, not just "verifier unit tests green."
 
 ## Tagged entities introduced this cycle
 
@@ -125,6 +136,18 @@ The hermetic tier has one honest limitation: `file://` URLs route through `sourc
 - `internal/translator/claude` — built-in Claude translator #v2-decision
 - `verify.StubVerifier` — v2.0 policy-only verifier #rescue (placeholder for sigstore-go in v2.1)
 - `Config.ClaudeTranslatorEnabled()` — default-on helper that codifies the "absent config = default" pattern
+
+### v2.2 cycle (PRD 0009)
+
+- `internal/plugin/wasm/Capabilities` — per-invocation gate set (fs mounts, env allowlist, network host allowlist, memory + timeout) #v2-decision
+- `internal/plugin/wasm/Runtime.LoadCached` — LRU module cache keyed by SHA256, 500 MiB default budget
+- `internal/plugin/source/fetchGitHubRelease` — release-asset fetch path for `kind = "wasm"` + `github.com/...` (avoids binary-in-tree pattern) #v2-decision
+- `samuel new plugin --kind=wasm|skill` — scaffolding command #v2-decision
+- `examples/samuel-go-guide-wasm` — reference plugin (splits to its own repo for the v2.2.0 stable tag)
+- `samuel-go-guide-wasm` repo + cosign-signed v0.1.3 release (sigstore protobuf bundle format) — reference deliverable
+- `SAMUEL_VERIFY_ALLOW_UNSIGNED` — env-level equivalent of `--allow-unsigned` for CI/scripted use
+- `cosign --new-bundle-format --bundle <path>` — canonical signing invocation for wasm-tier releases (legacy `--bundle` rejected by sigstore-go)
+- `DefaultPolicy().IdentityPatterns` uses `**` — matches the multi-segment GitHub Actions OIDC SAN format
 
 ---
 
