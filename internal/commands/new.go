@@ -260,13 +260,15 @@ jobs:
       - name: Build plugin.wasm
         run: tinygo build -o plugin.wasm -target=wasi -no-debug -opt=2 ./cmd
       - uses: sigstore/cosign-installer@v3
-      - name: Sign with cosign (keyless, sigstore-bundle format)
+      - name: Sign with cosign (keyless, sigstore protobuf-bundle format)
         env:
           COSIGN_EXPERIMENTAL: "1"
         run: |
-          # --bundle emits the sigstore-go JSON bundle the framework
-          # verifier expects (internal/plugin/verify/sigstore.go).
-          cosign sign-blob --yes --bundle plugin.wasm.bundle plugin.wasm
+          # --new-bundle-format emits the sigstore-go protobuf-JSON
+          # bundle (mediaType: application/vnd.dev.sigstore.bundle+json)
+          # the framework verifier expects. The legacy cosign --bundle
+          # output isn't sigstore-go compatible.
+          cosign sign-blob --yes --new-bundle-format --bundle plugin.wasm.bundle plugin.wasm
       - uses: actions/upload-artifact@v4
         with:
           name: %s-${{ github.ref_name }}
