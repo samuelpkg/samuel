@@ -260,18 +260,19 @@ jobs:
       - name: Build plugin.wasm
         run: tinygo build -o plugin.wasm -target=wasi -no-debug -opt=2 ./cmd
       - uses: sigstore/cosign-installer@v3
-      - name: Sign with cosign (keyless)
+      - name: Sign with cosign (keyless, sigstore-bundle format)
         env:
           COSIGN_EXPERIMENTAL: "1"
         run: |
-          cosign sign-blob --yes --output-signature plugin.wasm.sig --output-certificate plugin.wasm.pem plugin.wasm
+          # --bundle emits the sigstore-go JSON bundle the framework
+          # verifier expects (internal/plugin/verify/sigstore.go).
+          cosign sign-blob --yes --bundle plugin.wasm.bundle plugin.wasm
       - uses: actions/upload-artifact@v4
         with:
           name: %s-${{ github.ref_name }}
           path: |
             plugin.wasm
-            plugin.wasm.sig
-            plugin.wasm.pem
+            plugin.wasm.bundle
             samuel-plugin.toml
 `, name)
 }
