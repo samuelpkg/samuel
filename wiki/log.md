@@ -2,10 +2,29 @@
 title: Samuel Wiki Log
 type: log
 created: 2026-05-12
-updated: 2026-05-13
+updated: 2026-05-14
 ---
 
 # Wiki Log
+
+## [2026-05-14] ship | PRD 0009 WASM plugin tier (v2.2.0-rc.1)
+
+PRD 0009 landed end-to-end. Framework PR [#30](https://github.com/samuelpkg/samuel/pull/30) (capability enforcement, module cache, cold-start CI gate, scaffold command, hermetic e2e, reference plugin source); v2.2.0-rc.1 tagged. Released `samuel-go-guide-wasm@0.1.3` as the cosign-signed reference plugin.
+
+Six follow-up PRs cleaned up unexpected gaps in the live install path:
+
+- [#32](https://github.com/samuelpkg/samuel/pull/32) — release-asset fetcher (wasm binaries live in GitHub releases, not the git tree).
+- [#33](https://github.com/samuelpkg/samuel/pull/33) → [#34](https://github.com/samuelpkg/samuel/pull/34) — cosign `--bundle` → `--new-bundle-format`; sigstore-go only parses the protobuf JSON bundle, the legacy cosign output is silently rejected.
+- [#35](https://github.com/samuelpkg/samuel/pull/35) — `DefaultPolicy().IdentityPatterns` from `samuelpkg/*` → `samuelpkg/**`; GitHub Actions OIDC SANs span many path segments, single-segment glob never matched.
+- [#36](https://github.com/samuelpkg/samuel/pull/36) — `SAMUEL_VERIFY_ALLOW_UNSIGNED` env hook the live test helpers had been setting since PRD 0007 with no framework-side reader.
+
+Open question resolved: cold-start budget is ≤50 ms reference / ≤150 ms CI; measured median ~0.65 ms on Apple M1 Max. See [[CLAUDE]] open-questions list.
+
+RFD number reuse: 0010 was originally penciled for "Multi-version plugin coexistence" but ended up as "WASM plugin tier" since that was the more pressing follow-up. Coexistence renumbers when prioritized. [[synthesis/v2-rfds-to-write]] updated.
+
+Live e2e tier observations:
+
+- 10 tests pass, 4 `TestVerify_*` skip (gated by `SAMUEL_LIVE_VERIFY_FIXTURES=1`) — the signed/unsigned/wrong-identity fixture repos PRD 0008 referenced (`sign-fixtures.yml`) were never built. Skip messages document the next step.
 
 ## [2026-05-13] roadmap | next 5 PRDs drafted (0007–0011)
 

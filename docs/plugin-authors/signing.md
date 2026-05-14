@@ -126,19 +126,34 @@ samuel install file://./my-plugin --allow-unsigned
 
 This is the **only** sanctioned bypass. `--allow-unsigned` does not extend to remote installs without an entry in `[security].allow_unsigned_for` — Samuel will reject `samuel install github.com/random/plugin --allow-unsigned` unless the registry is on that list.
 
+### `SAMUEL_VERIFY_ALLOW_UNSIGNED` env equivalent
+
+Setting `SAMUEL_VERIFY_ALLOW_UNSIGNED=1` (also accepts `true` / `yes`)
+in the environment is equivalent to passing `--allow-unsigned` to
+every `samuel install` and `samuel update` invocation in that shell.
+Intended for CI/scripted contexts that re-run installs against
+unsigned fixtures (e.g. the framework's `e2e/live` tier); not
+recommended for daily use because it's invisible at the CLI surface.
+
 ## Verification flow
 
 ```text
 samuel install <plugin>
    ├─ resolve via registry
-   ├─ fetch artifact + .bundle (Sigstore signature bundle)
-   ├─ cosign verify-blob --bundle …
+   ├─ fetch artifact + .bundle (sigstore-go protobuf JSON bundle)
+   ├─ sigstore-go bundle.LoadJSONFromPath(...) → verify
    │     │
-   │     ├─ certificate identity ∈ trusted_identities? → continue
-   │     └─ no                                          → SAM-VERIFY-001 error
+   │     ├─ certificate identity ∈ identity_patterns? → continue
+   │     └─ no                                         → SAM-VERIFY-001 error
    ├─ record signature digest in samuel.lock
    └─ proceed to capability prompt + install
 ```
+
+The framework verifier consumes the sigstore protobuf-bundle format
+(mediaType `application/vnd.dev.sigstore.bundle.v0.3+json`). Publish
+plugins via `cosign sign-blob --new-bundle-format --bundle <out>` —
+the legacy `--bundle` output is not sigstore-go-compatible and is
+silently rejected as `signature bundle missing`.
 
 If verification fails, the plugin is not extracted, not installed, and not cached. The lockfile is not touched.
 

@@ -65,8 +65,10 @@ Each RFD references its dependencies in the `labels` and inline links.
 
 Things deferred but worth eventually documenting:
 
-- **RFD 0009** — Plugin signing via Sigstore enforcement (currently opt-in).
-- **RFD 0010** — Multi-version plugin coexistence (versioned plugin namespaces).
+- ~~**RFD 0009** — Plugin signing via Sigstore enforcement (currently opt-in).~~
+  **Committed in v2.1.** Landed via PRD 0008 + [`docs/rfd/0009.md`](../../docs/rfd/0009.md). `verify.Default()` now returns `SigstoreVerifier`; `IsProduction()` is `true`.
+- ~~**RFD 0010** — Multi-version plugin coexistence (versioned plugin namespaces).~~
+  Number reused. RFD 0010 shipped as **WASM plugin tier — wazero + TinyGo + capability gates** ([`docs/rfd/0010.md`](../../docs/rfd/0010.md)) in v2.2 (PRD 0009), since the wasm-tier work was the more pressing follow-up. Multi-version coexistence is renumbered to RFD 0012+ when prioritised.
 - **RFD 0011** — Cross-agent prompt translation layer (codifying [[concepts/multi-agent-support]]).
 - **RFD 0012** — Hot-reload of plugins without `samuel run` restart.
 
